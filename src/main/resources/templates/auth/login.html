@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>로그인 | Gym Management</title>
+    <link rel="stylesheet" th:href="@{/css/common/base.css}">
+</head>
+<body>
+<main>
+    <h1>Gym Management</h1>
+    <form th:action="@{/login}" method="post">
+        <label>로그인 ID <input type="text" name="username" required></label>
+        <label>비밀번호 <input type="password" name="password" required></label>
+        <button type="submit">로그인</button>
+    </form>
+</main>
+</body>
+</html>

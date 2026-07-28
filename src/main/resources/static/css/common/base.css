@@ -1,0 +1,15 @@
+:root {
+    color-scheme: light;
+    font-family: "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+body {
+    margin: 0;
+    color: #1f2937;
+    background: #f8fafc;
+}
+
+main {
+    width: min(1080px, calc(100% - 32px));
+    margin: 48px auto;
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acorn.gymmanagement.member.mapper.MemberMapper">
+    <select id="findAll" resultType="com.acorn.gymmanagement.member.model.Member">
+        SELECT id, user_id, name, phone, joined_at, status, created_at, updated_at
+        FROM members
+        ORDER BY id DESC
+    </select>
+    <select id="findById" resultType="com.acorn.gymmanagement.member.model.Member">
+        SELECT id, user_id, name, phone, joined_at, status, created_at, updated_at
+        FROM members
+        WHERE id = #{id}
+    </select>
+    <insert id="insert">
+        INSERT INTO members (user_id, name, phone, joined_at, status)
+        VALUES (#{userId}, #{name}, #{phone}, #{joinedAt}, #{status})
+    </insert>
+    <update id="update">
+        UPDATE members
+        SET name = #{name}, phone = #{phone}, status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+</mapper>

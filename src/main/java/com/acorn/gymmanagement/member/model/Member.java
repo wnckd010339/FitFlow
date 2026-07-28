@@ -1,0 +1,16 @@
+package com.acorn.gymmanagement.member.model;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+public record Member(
+        Long id,
+        Long userId,
+        String name,
+        String phone,
+        LocalDate joinedAt,
+        String status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
+) {
+}

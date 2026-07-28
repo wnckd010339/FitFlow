@@ -1,0 +1,2 @@
+/** trainer 도메인의 dto/response 계층입니다. */
+package com.acorn.gymmanagement.trainer.dto.response;
