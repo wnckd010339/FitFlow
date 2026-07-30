@@ -1,12 +1,13 @@
 package com.acorn.gymmanagement.auth.mapper;
 
-import com.acorn.gymmanagement.auth.model.UserAccount;
+import com.acorn.gymmanagement.auth.model.LocalAuthenticatedUser;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.Optional;
 
 @Mapper
 public interface AuthMapper {
 
-    Optional<UserAccount> findByLoginId(String loginId);
+    Optional<LocalAuthenticatedUser> findLocalUserByLoginId(@Param("loginId") String loginId);
 }

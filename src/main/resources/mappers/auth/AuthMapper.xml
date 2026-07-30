@@ -2,9 +2,28 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.acorn.gymmanagement.auth.mapper.AuthMapper">
-    <select id="findByLoginId" resultType="com.acorn.gymmanagement.auth.model.UserAccount">
-        SELECT id, login_id, password, role, status, created_at, updated_at
-        FROM users
-        WHERE login_id = #{loginId}
+    <resultMap id="LocalAuthenticatedUserResultMap" type="com.acorn.gymmanagement.auth.model.LocalAuthenticatedUser">
+        <id property="userId" column="user_id" />
+        <result property="loginId" column="login_id" />
+        <result property="passwordHash" column="password_hash" />
+        <result property="email" column="email" />
+        <result property="role" column="role" />
+        <result property="status" column="status" />
+    </resultMap>
+
+    <select id="findLocalUserByLoginId"
+            parameterType="string"
+            resultMap="LocalAuthenticatedUserResultMap">
+        SELECT
+            u.id AS user_id,
+            c.login_id,
+            c.password_hash,
+            u.email,
+            u.role,
+            u.status
+        FROM users u
+        JOIN user_local_credentials c
+            ON c.user_id = u.id
+        WHERE c.login_id = #{loginId}
     </select>
 </mapper>

@@ -3,17 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>로그인 | Gym Management</title>
-    <link rel="stylesheet" th:href="@{/css/common/base.css}">
+    <meta name="description" content="FitFlow 헬스장 관리 서비스 로그인">
+    <title>로그인 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/common/base.css}" href="/css/common/base.css">
+    <link rel="stylesheet" th:href="@{/css/screens/login.css}" href="/css/screens/login.css">
 </head>
-<body>
-<main>
-    <h1>Gym Management</h1>
-    <form th:action="@{/login}" method="post">
-        <label>로그인 ID <input type="text" name="username" required></label>
-        <label>비밀번호 <input type="password" name="password" required></label>
-        <button type="submit">로그인</button>
-    </form>
+<body class="login-page">
+<main class="login-layout">
+    <section class="brand-panel" aria-labelledby="brand-heading">
+        <a class="brand" th:href="@{/login}" href="/login" aria-label="FitFlow 로그인 홈">
+            <span class="brand-mark" aria-hidden="true">F</span>
+            <span class="brand-name">FitFlow</span>
+        </a>
+
+        <div class="brand-content">
+            <p class="brand-eyebrow">GYM MANAGEMENT SERVICE</p>
+            <h1 id="brand-heading">
+                나의 운동을 더 간편하게,<br>
+                <strong>한곳에서 관리하세요.</strong>
+            </h1>
+            <p class="brand-description">
+                회원권부터 출석, 운동 기록까지<br>
+                매일의 피트니스 여정을 FitFlow와 함께하세요.
+            </p>
+
+            <div class="feature-card">
+                <p class="feature-title">회원 전용 기능</p>
+                <ul class="feature-list">
+                    <li>QR 출석</li>
+                    <li>회원권 조회</li>
+                    <li>운동 루틴</li>
+                    <li>운동 기록</li>
+                    <li>결제 내역</li>
+                    <li>내 정보</li>
+                </ul>
+                <p class="feature-note">
+                    담당 트레이너 배정은 원하는 회원만 선택할 수 있어요.
+                </p>
+            </div>
+        </div>
+
+        <p class="brand-footer">© 2026 FitFlow. Move better, live stronger.</p>
+    </section>
+
+    <section class="auth-panel" aria-labelledby="login-heading">
+        <div class="auth-card">
+            <div class="mobile-brand" aria-hidden="true">
+                <span class="brand-mark">F</span>
+                <span class="brand-name">FitFlow</span>
+            </div>
+
+            <header class="auth-header">
+                <p class="auth-eyebrow">WELCOME BACK</p>
+                <h2 id="login-heading">FitFlow 시작하기</h2>
+                <p>가입한 방식으로 로그인해 주세요.</p>
+            </header>
+
+            <div class="form-alert form-alert--error"
+                 th:if="${errorMessage}"
+                 role="alert">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 8v5m0 3.5v.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+                <span th:text="${errorMessage}">아이디 또는 비밀번호를 확인해 주세요.</span>
+            </div>
+
+            <form class="login-form"
+                  th:action="@{/login}"
+                  th:object="${loginForm}"
+                  method="post"
+                  novalidate>
+                <input th:if="${redirect}"
+                       type="hidden"
+                       name="redirect"
+                       th:value="${redirect}">
+
+                <div class="form-field"
+                     th:classappend="${#fields.hasErrors('loginId')} ? ' form-field--error'">
+                    <label for="loginId">로그인 ID</label>
+                    <input id="loginId"
+                           type="text"
+                           th:field="*{loginId}"
+                           placeholder="아이디를 입력해 주세요"
+                           autocomplete="username"
+                           autocapitalize="none"
+                           spellcheck="false"
+                           autofocus
+                           th:attr="aria-invalid=${#fields.hasErrors('loginId')}">
+                    <p class="field-error"
+                       th:if="${#fields.hasErrors('loginId')}"
+                       th:errors="*{loginId}">로그인 ID를 입력해 주세요.</p>
+                </div>
+
+                <div class="form-field"
+                     th:classappend="${#fields.hasErrors('password')} ? ' form-field--error'">
+                    <label for="password">비밀번호</label>
+                    <input id="password"
+                           type="password"
+                           th:field="*{password}"
+                           placeholder="비밀번호를 입력해 주세요"
+                           autocomplete="current-password"
+                           th:attr="aria-invalid=${#fields.hasErrors('password')}">
+                    <p class="field-error"
+                       th:if="${#fields.hasErrors('password')}"
+                       th:errors="*{password}">비밀번호를 입력해 주세요.</p>
+                </div>
+
+                <button class="button button--primary" type="submit">
+                    로그인
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m9 18 6-6-6-6"/>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="divider" role="separator">
+                <span>또는</span>
+            </div>
+
+            <a class="button button--google"
+               th:href="@{/oauth2/authorization/google}"
+               href="/oauth2/authorization/google">
+                <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.32 2.98-7.41Z"/>
+                    <path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.63-2.36l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"/>
+                    <path fill="#FBBC05" d="M6.39 13.93A6.02 6.02 0 0 1 6.07 12c0-.67.12-1.32.32-1.93V7.45H3.04A10 10 0 0 0 2 12c0 1.63.39 3.17 1.04 4.55l3.35-2.62Z"/>
+                    <path fill="#EA4335" d="M12 5.94c1.47 0 2.79.5 3.82 1.5l2.88-2.88A9.65 9.65 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35 2.62C7.18 7.7 9.39 5.94 12 5.94Z"/>
+                </svg>
+                Google로 로그인
+            </a>
+
+            <div class="signup-area">
+                <p>아직 FitFlow 회원이 아니신가요?</p>
+                <a class="button button--signup" th:href="@{/signup}" href="/signup">
+                    홈페이지에서 회원가입
+                </a>
+            </div>
+
+            <aside class="account-notice">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm0-11v6m0-10v.01"/>
+                </svg>
+                <div>
+                    <strong>관리자 계정은 별도로 발급됩니다.</strong>
+                    <p>회원은 직접 가입 후 바로 로그인할 수 있어요.</p>
+                </div>
+            </aside>
+        </div>
+    </section>
 </main>
 </body>
 </html>
