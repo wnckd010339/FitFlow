@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>나의 FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/screens/member-home.css}" href="/css/screens/member-home.css">
+</head>
+<body>
+<header class="member-header">
+    <a class="brand" href="/member/home"><span>F</span>FitFlow</a>
+    <nav><a class="active" href="/member/home">홈</a><a href="#">회원권</a><a href="#">출석</a><a href="#">운동</a><a href="#">결제 내역</a></nav>
+    <div class="member-profile"><button type="button" aria-label="알림">●</button><span>김</span><strong>김지훈</strong>
+        <form th:action="@{/logout}" action="/logout" method="post"><button type="submit">로그아웃</button></form>
+    </div>
+</header>
+
+<main class="member-main">
+    <section class="member-hero">
+        <div class="hero-copy"><p>MY FITFLOW</p><h1>오늘도 한 걸음 더,<br><strong>나답게 움직여 볼까요?</strong></h1><span>7월 30일 목요일 · 이번 주 3번째 운동이에요.</span>
+            <div class="hero-actions"><a class="primary" href="#">QR 체크인</a><a href="#">운동 기록하기</a></div>
+        </div>
+        <div class="weekly-ring"><div><strong>3</strong><span>/ 4회</span></div><p>이번 주 운동 목표</p><small>한 번만 더 채우면 목표 달성!</small></div>
+    </section>
+
+    <section class="member-summary">
+        <article><span>현재 회원권</span><strong>3개월 자유 이용권</strong><p>2026.08.09까지 · <b>10일 남음</b></p></article>
+        <article><span>PT 잔여 횟수</span><strong>5회</strong><p>담당 김도윤 트레이너</p></article>
+        <article><span>이번 달 출석</span><strong>14일</strong><p>지난달보다 3일 더 왔어요</p></article>
+    </section>
+
+    <section class="member-grid">
+        <article class="member-card routine">
+            <div class="card-heading"><div><p>TODAY'S ROUTINE</p><h2>오늘의 운동</h2></div><a href="#">전체 루틴</a></div>
+            <div class="routine-title"><span>DAY 2</span><div><strong>하체 근력 강화</strong><small>예상 시간 55분 · 운동 5개</small></div></div>
+            <ul>
+                <li><span>01</span><div><strong>백 스쿼트</strong><small>60kg · 4세트 · 8–10회</small></div><button type="button">시작</button></li>
+                <li><span>02</span><div><strong>레그 프레스</strong><small>100kg · 4세트 · 10–12회</small></div><button type="button">시작</button></li>
+                <li><span>03</span><div><strong>루마니안 데드리프트</strong><small>50kg · 3세트 · 10회</small></div><button type="button">시작</button></li>
+            </ul>
+            <a class="routine-start" href="#">오늘 운동 시작하기</a>
+        </article>
+
+        <aside class="member-side">
+            <article class="member-card checkin">
+                <div class="card-heading"><div><p>ATTENDANCE</p><h2>오늘의 출석</h2></div></div>
+                <div class="checkin-state"><span>✓</span><div><strong>09:42 체크인</strong><small>현재 1시간 18분째 운동 중</small></div></div>
+                <a href="#">체크아웃하기</a>
+            </article>
+            <article class="member-card trainer">
+                <div class="card-heading"><div><p>MY TRAINER</p><h2>담당 트레이너</h2></div></div>
+                <div class="trainer-info"><span>김</span><div><strong>김도윤 트레이너</strong><small>근력 향상 · 자세 교정</small></div></div>
+                <blockquote>“무릎 방향에 집중하면서 오늘 하체 루틴도 천천히 진행해 주세요!”</blockquote>
+            </article>
+        </aside>
+
+        <article class="member-card activity">
+            <div class="card-heading"><div><p>RECENT ACTIVITY</p><h2>최근 운동 기록</h2></div><a href="#">기록 전체보기</a></div>
+            <div class="activity-list">
+                <div><time>07.28</time><span>상체</span><strong>상체 근력 루틴</strong><small>운동 6개 · 63분</small><b>완료</b></div>
+                <div><time>07.25</time><span>유산소</span><strong>러닝 인터벌</strong><small>5.2km · 42분</small><b>완료</b></div>
+                <div><time>07.23</time><span>하체</span><strong>하체 근력 루틴</strong><small>운동 5개 · 58분</small><b>완료</b></div>
+            </div>
+        </article>
+    </section>
+</main>
+</body>
+</html>

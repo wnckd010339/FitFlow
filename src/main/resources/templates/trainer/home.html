@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>트레이너 홈 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/screens/trainer-home.css}" href="/css/screens/trainer-home.css">
+</head>
+<body>
+<header class="trainer-header">
+    <a class="brand" href="/trainer/home"><span>F</span>FitFlow <small>TRAINER</small></a>
+    <nav><a class="active" href="/trainer/home">홈</a><a href="#">담당 회원</a><a href="#">운동 루틴</a><a href="#">일정</a></nav>
+    <div class="profile"><span>김</span><div><strong>김도윤 트레이너</strong><small>근력 향상 · 자세 교정</small></div>
+        <form th:action="@{/logout}" action="/logout" method="post"><button>로그아웃</button></form>
+    </div>
+</header>
+
+<main class="trainer-main">
+    <section class="welcome">
+        <div><p>THURSDAY, JULY 30</p><h1>좋은 오후예요, 김도윤 트레이너님!</h1><span>오늘 예정된 수업과 담당 회원의 운동 현황을 확인해 보세요.</span></div>
+        <a href="#">새 루틴 만들기 <b>＋</b></a>
+    </section>
+
+    <section class="trainer-metrics">
+        <article><span>오늘 PT 일정</span><strong>4<small>건</small></strong><p>다음 수업 14:00</p></article>
+        <article><span>담당 회원</span><strong>18<small>명</small></strong><p>이번 주 신규 2명</p></article>
+        <article><span>루틴 수행률</span><strong>82<small>%</small></strong><p>지난주보다 6% 상승</p></article>
+        <article><span>피드백 대기</span><strong>5<small>건</small></strong><p>오늘 확인이 필요해요</p></article>
+    </section>
+
+    <section class="trainer-grid">
+        <article class="card schedule">
+            <div class="card-title"><div><p>TODAY</p><h2>오늘의 PT 일정</h2></div><a href="#">전체 일정</a></div>
+            <ol>
+                <li class="done"><time>10:00</time><div><strong>박서준</strong><span>상체 근력 · 완료</span></div><b>완료</b></li>
+                <li class="active"><time>14:00</time><div><strong>김지훈</strong><span>하체 근력 · PT 6/10회</span></div><b>50분 후</b></li>
+                <li><time>16:30</time><div><strong>이서연</strong><span>체형 교정 · PT 3/10회</span></div><b>예정</b></li>
+                <li><time>19:00</time><div><strong>정현우</strong><span>전신 운동 · PT 8/10회</span></div><b>예정</b></li>
+            </ol>
+        </article>
+
+        <article class="card focus-member">
+            <div class="card-title"><div><p>NEXT MEMBER</p><h2>다음 회원</h2></div></div>
+            <div class="member-head"><span>김</span><div><h3>김지훈</h3><p>남 · 31세 · 목표: 근력 향상</p></div></div>
+            <dl><div><dt>현재 회원권</dt><dd>PT 10회 · 5회 남음</dd></div><div><dt>최근 운동</dt><dd>7월 28일 · 상체 루틴</dd></div><div><dt>주의사항</dt><dd>왼쪽 무릎 부담 주의</dd></div></dl>
+            <a href="#">회원 상세 보기</a>
+        </article>
+
+        <article class="card members">
+            <div class="card-title"><div><p>MEMBERS</p><h2>담당 회원 운동 현황</h2></div><a href="#">전체 회원</a></div>
+            <div class="member-row"><span class="avatar mint">이</span><div><strong>이서연</strong><small>체형 교정 루틴 · 4/5일 수행</small></div><progress value="80" max="100">80%</progress><b>80%</b></div>
+            <div class="member-row"><span class="avatar blue">박</span><div><strong>박서준</strong><small>벌크업 루틴 · 5/5일 수행</small></div><progress value="100" max="100">100%</progress><b>100%</b></div>
+            <div class="member-row"><span class="avatar yellow">정</span><div><strong>정현우</strong><small>전신 루틴 · 2/5일 수행</small></div><progress value="40" max="100">40%</progress><b>40%</b></div>
+        </article>
+
+        <article class="card feedback">
+            <div class="card-title"><div><p>FEEDBACK</p><h2>확인이 필요한 기록</h2></div></div>
+            <a href="#"><span>김지훈</span><div><strong>스쿼트 60kg · 4세트</strong><small>오늘 09:45 기록</small></div><b>확인</b></a>
+            <a href="#"><span>이서연</span><div><strong>케이블 로우 · 자세 질문</strong><small>어제 20:12 기록</small></div><b>답변</b></a>
+        </article>
+    </section>
+</main>
+</body>
+</html>
