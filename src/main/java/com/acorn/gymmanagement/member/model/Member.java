@@ -9,8 +9,10 @@ public record Member(
         String name,
         String phone,
         LocalDate joinedAt,
-        String status,
+        MemberStatus status,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        LocalDate birthDate,
+        boolean trainerRequested
 ) {
 }

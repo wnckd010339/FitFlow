@@ -2,23 +2,148 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.acorn.gymmanagement.member.mapper.MemberMapper">
+
+    <select id="search"
+            parameterType="com.acorn.gymmanagement.member.dto.request.MemberSearchRequest"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberListResponse">
+        SELECT
+            m.id,
+            m.name,
+            lc.login_id,
+            m.phone,
+            m.status,
+            mp.name as membership_name,
+            DATEDIFF(mm.end_date, CURRENT_DATE) AS remaining_days,
+            t.name AS trainer_name,
+            latest_attendance.last_attendance_at
+        FROM members m
+        JOIN users u
+            ON u.id = m.user_id
+        LEFT JOIN user_local_credentials lc
+            ON lc.user_id = u.id
+        LEFT JOIN member_memberships mm
+            ON mm.id = (
+                SELECT mm2.id
+                FROM member_memberships mm2
+                WHERE mm2.member_id = m.id
+                 AND mm2.status = 'ACTIVE'
+                 AND mm2.end_date >= CURRENT_DATE
+                ORDER BY mm2.end_date ASC, mm2.id DESC
+                LIMIT 1
+            )
+        LEFT JOIN membership_products mp
+            ON mp.id = mm.product_id
+        LEFT JOIN trainer_assignments ta
+            ON ta.id = (
+                SELECT ta2.id
+                FROM trainer_assignments ta2
+                WHERE ta2.member_id = m.id
+                 AND ta2.status = 'ACTIVE'
+                ORDER BY ta2.started_at DESC, ta2.id DESC
+                LIMIT 1
+        )
+        LEFT JOIN trainers t
+            ON t.id = ta.trainer_id
+        LEFT JOIN (
+            SELECT
+                member_id,
+                MAX(checked_in_at) AS last_attendance_at
+            FROM attendances
+            GROUP BY member_id
+        ) latest_attendance
+            ON latest_attendance.member_id = m.id
+        <where>
+            <if test="keyword != null and keyword != ''" >
+                AND (
+                    m.name LIKE CONCAT('%', #{keyword}, '%')
+                    OR m.phone LIKE CONCAT('%', #{keyword}, '%')
+                    OR lc.login_id LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+
+            <if test="status != null">
+                AND m.status = #{status}
+            </if>
+
+            <if test="membershipStatus == 'ACTIVE'">
+                AND mm.id IS NOT NULL
+            </if>
+
+            <if test="membershipStatus == 'EXPIRING'">
+                AND mm.id IS NOT NULL
+                AND mm.end_date BETWEEN CURRENT_DATE
+                                    AND DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY)
+            </if>
+
+            <if test="membershipStatus == 'NONE'">
+                AND mm.id IS NULL
+            </if>
+        </where>
+        ORDER BY m.id DESC
+    </select>
+
     <select id="findAll" resultType="com.acorn.gymmanagement.member.model.Member">
-        SELECT id, user_id, name, phone, joined_at, status, created_at, updated_at
+        SELECT
+            id,
+            user_id,
+            name,
+            phone,
+            birth_date,
+            trainer_requested,
+            joined_at,
+            status,
+            created_at,
+            updated_at
         FROM members
         ORDER BY id DESC
     </select>
+
     <select id="findById" resultType="com.acorn.gymmanagement.member.model.Member">
-        SELECT id, user_id, name, phone, joined_at, status, created_at, updated_at
+        SELECT
+            id,
+            user_id,
+            name,
+            phone,
+            birth_date,
+            trainer_requested,
+            joined_at,
+            status,
+            created_at,
+            updated_at
         FROM members
         WHERE id = #{id}
     </select>
+
     <insert id="insert">
-        INSERT INTO members (user_id, name, phone, joined_at, status)
-        VALUES (#{userId}, #{name}, #{phone}, #{joinedAt}, #{status})
+        INSERT INTO members (
+            user_id,
+            name,
+            phone,
+            birth_date,
+            trainer_requested,
+            joined_at,
+            status
+        )
+        VALUES (
+            #{userId},
+            #{name},
+            #{phone},
+            #{birthDate},
+            #{trainerRequested},
+            #{joinedAt},
+            #{status}
+        )
     </insert>
+
     <update id="update">
         UPDATE members
-        SET name = #{name}, phone = #{phone}, status = #{status}, updated_at = CURRENT_TIMESTAMP
+        SET
+            name = #{name},
+            phone = #{phone},
+            birth_date = #{birthDate},
+            trainer_requested = #{trainerRequested},
+            status = #{status},
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
 </mapper>

@@ -3,13 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>회원 관리 | Gym Management</title>
-    <link rel="stylesheet" th:href="@{/css/common/base.css}">
+    <title>회원 관리 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/screens/admin-member.css}"
+          href="/css/screens/admin-member.css">
 </head>
 <body>
-<main>
-    <h1>회원 관리</h1>
-    <p>회원 목록 화면 스켈레톤입니다.</p>
-</main>
+<div class="admin-shell">
+    <aside class="sidebar">
+        <a class="brand" th:href="@{/admin/dashboard}" href="/admin/dashboard">
+            <span>F</span> FitFlow
+        </a>
+
+        <p class="workspace-label">관리자</p>
+        <nav aria-label="관리자 메뉴">
+            <a href="/admin/dashboard"><i></i>대시보드</a>
+            <a class="active" href="/admin/members"><i></i>회원 관리</a>
+            <a href="/admin/memberships"><i></i>회원권·결제</a>
+            <a href="/admin/attendance"><i></i>출석 관리</a>
+            <a href="/admin/trainers"><i></i>트레이너</a>
+            <a href="/admin/facilities"><i></i>시설 관리</a>
+        </nav>
+
+        <div class="sidebar-profile">
+            <div class="avatar">관</div>
+            <div>
+                <strong>박서준 관리자</strong>
+                <span>슈퍼 관리자</span>
+            </div>
+            <button type="button" aria-label="프로필 메뉴">•••</button>
+        </div>
+    </aside>
+
+    <main class="content">
+        <header class="page-header">
+            <div>
+                <h1>회원 관리</h1>
+                <p>등록 회원을 검색하고 상태 및 이용 정보를 관리합니다.</p>
+            </div>
+            <a class="primary-button" href="/admin/members/new">+ 신규 회원</a>
+        </header>
+
+        <form class="search-panel"
+              th:action="@{/admin/members}"
+              action="/admin/members"
+              method="get"
+              aria-label="회원 검색">
+
+            <div class="field field-search">
+                <label for="keyword">회원 검색</label>
+                <input id="keyword"
+                       name="keyword"
+                       type="search"
+                       th:value="${condition.keyword}"
+                       placeholder="이름, 연락처 또는 로그인ID">
+            </div>
+
+            <div class="field">
+                <label for="member-status">회원 상태</label>
+                <select id="member-status" name="status">
+                    <option value="">전체</option>
+                    <option value="ACTIVE"
+                            th:selected="${condition.status != null
+                                        and condition.status.name() == 'ACTIVE'}">
+                        활성
+                    </option>
+
+                    <option value="SUSPENDED"
+                            th:selected="${condition.status != null
+                                          and condition.status.name() == 'SUSPENDED'}">
+                        정지
+                    </option>
+
+
+                    <option value="WITHDRAWN"
+                            th:selected="${condition.status != null
+                                          and condition.status.name() == 'WITHDRAWN'}">
+                        탈퇴
+                    </option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="membership-status">회원권</label>
+                <select id="membership-status" name="membershipStatus">
+                    <option value="">전체</option>
+                    <option value="ACTIVE"
+                            th:selected="${condition.membershipStatus == 'ACTIVE'}">
+                        이용중
+                    </option>
+
+                    <option value="EXPIRING"
+                            th:selected="${condition.membershipStatus == 'EXPIRING'}">
+                        만료 예정
+                    </option>
+
+                    <option value="NONE"
+                            th:selected="${condition.membershipStatus == 'NONE'}">
+                        없음
+                    </option>
+                </select>
+            </div>
+
+            <div class="search-actions">
+                <a class="secondary-button"
+                   th:href="@{/admin/members}"
+                   href="/admin/members">
+                   초기화
+                </a>
+
+                <button class="primary-button" type="submit">
+                    검색
+                </button>
+            </div>
+        </form>
+
+        <section class="member-section">
+            <div class="section-heading">
+                <div>
+                    <h2>전체 회원</h2>
+                    <span th:text="|총 ${#lists.size(members)}명|">
+                        총 248명
+                    </span>
+                </div>
+                <div class="legend">
+                    <span><i class="legend-dot active"></i>활성 231</span>
+                    <span><i class="legend-dot paused"></i>정지 12</span>
+                    <span><i class="legend-dot withdrawn"></i>탈퇴 5</span>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>회원</th>
+                            <th>연락처</th>
+                            <th>상태</th>
+                            <th>회원권</th>
+                            <th>담당 트레이너</th>
+                            <th>최근 출석</th>
+                            <th><span class="sr-only">상세</span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="member : ${members}">
+                            <td>
+                                <strong th:text="${member.name}">
+                                    김지훈
+                                </strong>
+                                <small th:text="${member.loginId != null
+                                           ? member.loginId
+                                           : '-'}">
+                                    jihoon94
+                                </small>
+                            </td>
+
+                            <td th:text="${member.phone}">
+                                010-1234-5678
+                            </td>
+
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${member.status.name() == 'ACTIVE'}
+                                           ? 'badge-active'
+                                           : (${member.status.name() == 'SUSPENDED'}
+                                           ? 'badge-paused'
+                                           : 'badge-withdrawn')"
+                                      th:text="${member.status.name() == 'ACTIVE'}
+                                        ?'활성'
+                                        :(${member.status.name() == 'SUSPENDED'}
+                                            ? '정지'
+                                            : '탈퇴')">
+                                    활성
+                                </span>
+                            </td>
+
+                            <td>
+                                <strong th:text="${member.membershipName != null
+                                            ? member.membershipName
+                                            : '없음'}">
+                                    3개월 자유 이용권
+                                </strong>
+
+                                <small th:if="${member.remainingDays != null}"
+                                       th:text="|D-${member.remainingDays}|">
+                                    D-12
+                                </small>
+                            </td>
+
+                            <td th:text="${member.trainerName != null
+                                    ? member.trainerName
+                                    : '미배정'}">
+                                김현우
+                            </td>
+
+                            <td th:text="${member.lastAttendanceAt != null
+                                    ? #temporals.format(member.lastAttendanceAt, 'yyyy.MM.dd HH:mm')
+                                    : '-'}">
+                                2026.07.30 09:42
+                            </td>
+
+                            <td>
+                                <a class="detail-link"
+                                   th:href="@{/admin/members/{memberId}
+                                               (memberId=${member.id})}">
+                                    상세 →
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(members)}">
+                            <td colspan="7" class="empty-row">
+                                검색 조건에 해당하는 회원이 없습니다.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <footer class="pagination">
+                    <span>1–6 / 248명</span>
+                    <nav aria-label="페이지 이동">
+                        <button type="button" disabled>이전</button>
+                        <button class="current" type="button">1</button>
+                        <button type="button">2</button>
+                        <button type="button">다음</button>
+                    </nav>
+                </footer>
+            </div>
+        </section>
+    </main>
+</div>
 </body>
 </html>
