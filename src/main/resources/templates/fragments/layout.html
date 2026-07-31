@@ -4,5 +4,26 @@
 <header th:fragment="header">
     <a th:href="@{/admin/dashboard}">Gym Management</a>
 </header>
+<aside class="sidebar" th:fragment="adminSidebar(activeMenu)">
+    <a class="brand" th:href="@{/admin/dashboard}" href="/admin/dashboard">
+        <span>F</span> FitFlow
+    </a>
+    <p class="workspace-label">관리자</p>
+    <nav aria-label="관리자 메뉴">
+        <a th:href="@{/admin/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'"><i></i>대시보드</a>
+        <a th:href="@{/admin/members}" th:classappend="${activeMenu == 'members'} ? 'active'"><i></i>회원 관리</a>
+        <a th:href="@{/admin/memberships}" th:classappend="${activeMenu == 'memberships'} ? 'active'"><i></i>회원권·결제</a>
+        <a th:href="@{/admin/attendance}" th:classappend="${activeMenu == 'attendance'} ? 'active'"><i></i>출석 관리</a>
+        <a th:href="@{/admin/trainers}" th:classappend="${activeMenu == 'trainers'} ? 'active'"><i></i>트레이너</a>
+        <a th:href="@{/admin/facilities}" th:classappend="${activeMenu == 'facilities'} ? 'active'"><i></i>시설 관리</a>
+    </nav>
+    <div class="sidebar-profile">
+        <div class="avatar">관</div>
+        <div>
+            <strong>FitFlow 관리자</strong>
+            <span>슈퍼 관리자</span>
+        </div>
+    </div>
+</aside>
 </body>
 </html>

@@ -1,12 +1,18 @@
 package com.acorn.gymmanagement.member.controller;
 
+import com.acorn.gymmanagement.common.pagination.PageRequest;
+import com.acorn.gymmanagement.common.pagination.PageResult;
 import com.acorn.gymmanagement.member.dto.request.MemberSearchRequest;
+import com.acorn.gymmanagement.member.dto.response.MemberDetailResponse;
+import com.acorn.gymmanagement.member.dto.response.MemberListResponse;
 import com.acorn.gymmanagement.member.service.MemberService;
+import com.acorn.gymmanagement.member.view.MemberDetailView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
@@ -19,11 +25,27 @@ public class MemberController {
     @GetMapping
     public String list(
             @ModelAttribute MemberSearchRequest condition,
+            @ModelAttribute PageRequest pageRequest,
             Model model
             ) {
+        PageResult<MemberListResponse> result =
+                memberService.search(condition, pageRequest);
 
-        model.addAttribute("members", memberService.search(condition));
+        model.addAttribute("result", result);
         model.addAttribute("condition", condition);
         return "admin/member/list";
+    }
+
+     @GetMapping("/{memberId}")
+    public String detail(
+            @PathVariable Long memberId,
+            Model model
+     ){
+         MemberDetailView detail =
+                 memberService.findDetailView(memberId);
+
+         model.addAttribute("detail", detail);
+
+         return "admin/member/detail";
     }
 }

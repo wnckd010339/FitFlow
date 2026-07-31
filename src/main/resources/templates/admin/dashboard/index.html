@@ -4,31 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>관리자 대시보드 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/common/admin-layout.css}" href="/css/common/admin-layout.css">
     <link rel="stylesheet" th:href="@{/css/screens/admin-dashboard.css}" href="/css/screens/admin-dashboard.css">
 </head>
 <body>
 <div class="admin-shell">
-    <aside class="sidebar">
-        <a class="brand" th:href="@{/admin/dashboard}" href="/admin/dashboard">
-            <span>F</span> FitFlow
-        </a>
-        <p class="workspace-label">MANAGEMENT</p>
-        <nav aria-label="관리자 메뉴">
-            <a class="active" href="/admin/dashboard">대시보드</a>
-            <a href="/admin/members">회원 관리</a>
-            <a href="/admin/trainers">트레이너 관리</a>
-            <a href="/admin/memberships">회원권·결제</a>
-            <a href="/admin/attendance">출석 관리</a>
-            <a href="/admin/facilities">시설 관리</a>
-        </nav>
-        <div class="sidebar-profile">
-            <div class="avatar">관</div>
-            <div><strong>FitFlow 관리자</strong><span>admin@fitflow.local</span></div>
-        </div>
-        <form th:action="@{/logout}" action="/logout" method="post">
-            <button type="submit">로그아웃</button>
-        </form>
-    </aside>
+    <aside th:replace="~{fragments/layout :: adminSidebar('dashboard')}"></aside>
 
     <main>
         <header class="topbar">

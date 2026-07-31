@@ -1,0 +1,145 @@
+.admin-shell {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+.sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 24px 18px 30px;
+    color: #fff;
+    background: var(--deep);
+}
+
+.sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    color: inherit;
+    font: 800 23px "Inter", sans-serif;
+    text-decoration: none;
+}
+
+.sidebar .brand span {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    color: var(--deep);
+    background: var(--lime);
+    border-radius: 50%;
+    font-size: 16px;
+}
+
+.workspace-label {
+    margin: 40px 10px 12px;
+    color: #8fb2a6;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.sidebar nav {
+    display: grid;
+    gap: 8px;
+}
+
+.sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-height: 44px;
+    padding: 0 16px;
+    color: #c4d5cf;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.sidebar nav a i {
+    width: 8px;
+    height: 8px;
+    background: #7da397;
+    border-radius: 50%;
+}
+
+.sidebar nav a:hover,
+.sidebar nav a.active {
+    color: #fff;
+    background: #245145;
+}
+
+.sidebar nav a.active {
+    font-weight: 700;
+}
+
+.sidebar nav a.active i {
+    background: var(--lime);
+}
+
+.sidebar-profile {
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+    padding: 17px 14px;
+    background: rgba(255, 255, 255, .06);
+    border-radius: 16px;
+}
+
+.sidebar-profile .avatar {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    color: var(--deep);
+    background: var(--lime);
+    border-radius: 50%;
+    font-weight: 800;
+}
+
+.sidebar-profile strong,
+.sidebar-profile span {
+    display: block;
+}
+
+.sidebar-profile strong {
+    font-size: 12px;
+}
+
+.sidebar-profile span {
+    margin-top: 3px;
+    color: #96b9ad;
+    font-size: 10px;
+}
+
+@media (max-width: 1100px) {
+    .admin-shell {
+        grid-template-columns: 210px minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 720px) {
+    .admin-shell {
+        display: block;
+    }
+
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        padding: 18px;
+    }
+
+    .workspace-label,
+    .sidebar nav,
+    .sidebar-profile {
+        display: none;
+    }
+}

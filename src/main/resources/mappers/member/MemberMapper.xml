@@ -3,84 +3,6 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.acorn.gymmanagement.member.mapper.MemberMapper">
 
-    <select id="search"
-            parameterType="com.acorn.gymmanagement.member.dto.request.MemberSearchRequest"
-            resultType="com.acorn.gymmanagement.member.dto.response.MemberListResponse">
-        SELECT
-            m.id,
-            m.name,
-            lc.login_id,
-            m.phone,
-            m.status,
-            mp.name as membership_name,
-            DATEDIFF(mm.end_date, CURRENT_DATE) AS remaining_days,
-            t.name AS trainer_name,
-            latest_attendance.last_attendance_at
-        FROM members m
-        JOIN users u
-            ON u.id = m.user_id
-        LEFT JOIN user_local_credentials lc
-            ON lc.user_id = u.id
-        LEFT JOIN member_memberships mm
-            ON mm.id = (
-                SELECT mm2.id
-                FROM member_memberships mm2
-                WHERE mm2.member_id = m.id
-                 AND mm2.status = 'ACTIVE'
-                 AND mm2.end_date >= CURRENT_DATE
-                ORDER BY mm2.end_date ASC, mm2.id DESC
-                LIMIT 1
-            )
-        LEFT JOIN membership_products mp
-            ON mp.id = mm.product_id
-        LEFT JOIN trainer_assignments ta
-            ON ta.id = (
-                SELECT ta2.id
-                FROM trainer_assignments ta2
-                WHERE ta2.member_id = m.id
-                 AND ta2.status = 'ACTIVE'
-                ORDER BY ta2.started_at DESC, ta2.id DESC
-                LIMIT 1
-        )
-        LEFT JOIN trainers t
-            ON t.id = ta.trainer_id
-        LEFT JOIN (
-            SELECT
-                member_id,
-                MAX(checked_in_at) AS last_attendance_at
-            FROM attendances
-            GROUP BY member_id
-        ) latest_attendance
-            ON latest_attendance.member_id = m.id
-        <where>
-            <if test="keyword != null and keyword != ''" >
-                AND (
-                    m.name LIKE CONCAT('%', #{keyword}, '%')
-                    OR m.phone LIKE CONCAT('%', #{keyword}, '%')
-                    OR lc.login_id LIKE CONCAT('%', #{keyword}, '%')
-                )
-            </if>
-
-            <if test="status != null">
-                AND m.status = #{status}
-            </if>
-
-            <if test="membershipStatus == 'ACTIVE'">
-                AND mm.id IS NOT NULL
-            </if>
-
-            <if test="membershipStatus == 'EXPIRING'">
-                AND mm.id IS NOT NULL
-                AND mm.end_date BETWEEN CURRENT_DATE
-                                    AND DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY)
-            </if>
-
-            <if test="membershipStatus == 'NONE'">
-                AND mm.id IS NULL
-            </if>
-        </where>
-        ORDER BY m.id DESC
-    </select>
 
     <select id="findAll" resultType="com.acorn.gymmanagement.member.model.Member">
         SELECT
@@ -146,4 +68,198 @@
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
+
+    <sql id="memberSearchFromAndWhere">
+        FROM members m
+        JOIN users u
+            ON u.id = m.user_id
+
+        LEFT JOIN user_local_credentials lc
+            ON lc.user_id = u.id
+
+        LEFT JOIN member_memberships mm
+            ON mm.id = (
+                SELECT mm2.id
+                FROM member_memberships mm2
+                WHERE mm2.member_id = m.id
+                    AND mm2.status = 'ACTIVE'
+                    AND mm2.end_date >= CURRENT_DATE
+                ORDER BY mm2.end_date ASC, mm2.id DESC
+                LIMIT 1
+        )
+
+        LEFT JOIN membership_products mp
+            ON mp.id = mm.product_id
+
+        LEFT JOIN trainer_assignments ta
+            ON ta.id = (
+                SELECT ta2.id
+                FROM trainer_assignments ta2
+                WHERE ta2.member_id = m.id
+                 AND ta2.status = 'ACTIVE'
+                ORDER BY ta2.started_at DESC, ta2.id DESC
+                LIMIT 1
+        )
+
+        LEFT JOIN trainers t
+            ON t.id = ta.trainer_id
+
+        LEFT JOIN (
+            SELECT
+                member_id,
+                MAX(checked_in_at) AS last_attendance_at
+            FROM attendances
+            GROUP BY member_id
+        ) latest_attendance
+          ON latest_attendance.member_id = m.id
+
+        <where>
+            <if test="condition.keyword != null
+                  and condition.keyword != ''">
+                AND (
+                m.name LIKE CONCAT('%', #{condition.keyword}, '%')
+                OR m.phone LIKE CONCAT('%', #{condition.keyword}, '%')
+                OR lc.login_id LIKE CONCAT('%', #{condition.keyword}, '%')
+                )
+            </if>
+
+            <if test="condition.status != null">
+                AND m.status = #{condition.status}
+            </if>
+
+            <if test="condition.membershipStatus == 'ACTIVE'">
+                AND mm.id IS NOT NULL
+            </if>
+
+            <if test="condition.membershipStatus == 'EXPIRING'">
+                AND mm.id IS NOT NULL
+                AND mm.end_date BETWEEN CURRENT_DATE
+                AND DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY)
+            </if>
+
+            <if test="condition.membershipStatus == 'NONE'">
+                AND mm.id IS NULL
+            </if>
+        </where>
+    </sql>
+
+    <select id="search"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberListResponse">
+        SELECT
+            m.id,
+            m.name,
+            lc.login_id,
+            m.phone,
+            m.status,
+            mp.name AS membership_name,
+            DATEDIFF(mm.end_date, CURRENT_DATE) AS remaining_days,
+            t.name AS trainer_name,
+            latest_attendance.last_attendance_at
+
+        <include refid="memberSearchFromAndWhere" />
+        ORDER BY m.id DESC
+        LIMIT #{page.size}
+        OFFSET #{page.offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(DISTINCT m.id)
+
+        <include refid="memberSearchFromAndWhere" />
+    </select>
+
+    <select id="findDetailById"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberDetailResponse">
+        SELECT
+            m.id,
+            m.name,
+            lc.login_id,
+            m.phone,
+            m.birth_date,
+            m.joined_at,
+            m.status,
+            u.last_login_at
+        FROM members m
+        JOIN users u
+            ON u.id = m.user_id
+        LEFT JOIN user_local_credentials lc
+            ON lc.user_id = u.id
+        WHERE m.id = #{memberId}
+    </select>
+
+    <select id="findCurrentMembership"
+            resultType="com.acorn.gymmanagement.member.dto.response.CurrentMembershipResponse">
+        SELECT
+            mm.id AS membership_id,
+            mp.name AS membership_name,
+            mm.start_date,
+            mm.end_date,
+            GREATEST(DATEDIFF(mm.end_date, CURRENT_DATE), 0) AS remaining_days,
+            LEAST(
+                100,
+                GREATEST(
+                    0,
+                    ROUND(
+                        DATEDIFF(CURRENT_DATE, mm.start_date)
+                        / GREATEST(DATEDIFF(mm.end_date, mm.start_date), 1)
+                        * 100
+                    )
+                )
+            ) AS usage_percent,
+            mm.status
+        FROM member_memberships mm
+        JOIN membership_products mp
+            ON mp.id = mm.product_id
+        WHERE mm.member_id = #{memberId}
+          AND mm.status = 'ACTIVE'
+          AND mm.end_date >= CURRENT_DATE
+        ORDER BY mm.end_date ASC, mm.id DESC
+        LIMIT 1
+    </select>
+
+    <select id="findRecentActivities"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberActivityResponse">
+        SELECT
+            activity_type,
+            description,
+            occurred_at
+        FROM (
+            SELECT
+                'ATTENDANCE' AS activity_type,
+                'QR 체크인' AS description,
+                a.checked_in_at AS occurred_at
+            FROM attendances a
+            WHERE a.member_id = #{memberId}
+
+            UNION ALL
+
+            SELECT
+                'WORKOUT' AS activity_type,
+                '운동 기록 저장' AS description,
+                ws.started_at AS occurred_at
+            FROM workout_sessions ws
+            WHERE ws.member_id = #{memberId}
+
+            UNION ALL
+
+            SELECT
+                'PAYMENT' AS activity_type,
+                CONCAT(
+                    CASE p.payment_method
+                        WHEN 'CARD' THEN '카드'
+                        WHEN 'CASH' THEN '현금'
+                        WHEN 'TRANSFER' THEN '계좌이체'
+                        ELSE p.payment_method
+                    END,
+                    ' 결제 ₩',
+                    FORMAT(p.amount, 0)
+                ) AS description,
+                p.paid_at AS occurred_at
+            FROM payments p
+            WHERE p.member_id = #{memberId}
+              AND p.status NOT IN ('PENDING', 'CANCELLED')
+        ) activities
+        ORDER BY occurred_at DESC
+        LIMIT 5
+    </select>
 </mapper>

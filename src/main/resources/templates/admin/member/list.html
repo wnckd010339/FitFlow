@@ -4,35 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>회원 관리 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/common/admin-layout.css}"
+          href="/css/common/admin-layout.css">
     <link rel="stylesheet" th:href="@{/css/screens/admin-member.css}"
           href="/css/screens/admin-member.css">
 </head>
 <body>
 <div class="admin-shell">
-    <aside class="sidebar">
-        <a class="brand" th:href="@{/admin/dashboard}" href="/admin/dashboard">
-            <span>F</span> FitFlow
-        </a>
-
-        <p class="workspace-label">관리자</p>
-        <nav aria-label="관리자 메뉴">
-            <a href="/admin/dashboard"><i></i>대시보드</a>
-            <a class="active" href="/admin/members"><i></i>회원 관리</a>
-            <a href="/admin/memberships"><i></i>회원권·결제</a>
-            <a href="/admin/attendance"><i></i>출석 관리</a>
-            <a href="/admin/trainers"><i></i>트레이너</a>
-            <a href="/admin/facilities"><i></i>시설 관리</a>
-        </nav>
-
-        <div class="sidebar-profile">
-            <div class="avatar">관</div>
-            <div>
-                <strong>박서준 관리자</strong>
-                <span>슈퍼 관리자</span>
-            </div>
-            <button type="button" aria-label="프로필 메뉴">•••</button>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/layout :: adminSidebar('members')}"></aside>
 
     <main class="content">
         <header class="page-header">
@@ -121,7 +100,7 @@
             <div class="section-heading">
                 <div>
                     <h2>전체 회원</h2>
-                    <span th:text="|총 ${#lists.size(members)}명|">
+                    <span th:text="|총 ${result.totalElements}명|">
                         총 248명
                     </span>
                 </div>
@@ -147,7 +126,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="member : ${members}">
+                        <tr th:each="member : ${result.content}">
                             <td>
                                 <strong th:text="${member.name}">
                                     김지훈
@@ -212,7 +191,7 @@
                                 </a>
                             </td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(members)}">
+                        <tr th:if="${#lists.isEmpty(result.content)}">
                             <td colspan="7" class="empty-row">
                                 검색 조건에 해당하는 회원이 없습니다.
                             </td>
@@ -220,19 +199,44 @@
                         </tbody>
                     </table>
                 </div>
-
-                <footer class="pagination">
-                    <span>1–6 / 248명</span>
-                    <nav aria-label="페이지 이동">
-                        <button type="button" disabled>이전</button>
-                        <button class="current" type="button">1</button>
-                        <button type="button">2</button>
-                        <button type="button">다음</button>
-                    </nav>
-                </footer>
             </div>
+
+            <footer class="pagination">
+                <span th:text="|${result.page} / ${result.totalPages} 페이지|">
+                    1 / 10 페이지
+                </span>
+
+                    <nav aria-label="페이지 이동">
+                        <a th:if="${result.hasPrevious}"
+                           th:href="@{/admin/members(
+                           page=${result.page - 1},
+                           size=${result.size},
+                           keyword=${condition.keyword},
+                           status=${condition.status},
+                           membershipStatus=${condition.membershipStatus}
+                       )}">
+                            이전
+                        </a>
+
+                        <a th:if="${result.hasNext}"
+                           th:href="@{/admin/members(
+                           page=${result.page + 1},
+                           size=${result.size},
+                           keyword=${condition.keyword},
+                           status=${condition.status},
+                           membershipStatus=${condition.membershipStatus}
+                            )}">
+                            다음
+                        </a>
+
+                        <span th:unless="${result.hasNext}">
+                            다음
+                        </span>
+                    </nav>
+            </footer>
         </section>
     </main>
 </div>
+
 </body>
 </html>
