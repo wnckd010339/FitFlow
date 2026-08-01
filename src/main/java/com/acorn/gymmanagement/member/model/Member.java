@@ -13,6 +13,7 @@ public record Member(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         LocalDate birthDate,
+        MemberGender gender,
         boolean trainerRequested
 ) {
 }

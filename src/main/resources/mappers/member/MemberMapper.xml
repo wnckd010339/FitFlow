@@ -262,4 +262,29 @@
         ORDER BY occurred_at DESC
         LIMIT 5
     </select>
+
+    <select id="existsByLoginId" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM user_local_credentials
+            WHERE login_id = #{loginId}
+        )
+    </select>
+
+    <insert id="insertUser"
+            parameterType="com.acorn.gymmanagement.member.model.MemberRegistration"
+            useGeneratedKeys = "true"
+            keyProperty = "userId"
+            keyColumn = "id">
+        INSERT INTO users(
+            email,
+            role,
+            status
+        )
+        VALUES(
+            NULL,
+            'MEMBER'
+            'ACTIVE'
+        )
+    </insert>
 </mapper>

@@ -2,6 +2,24 @@
 -- 회원 자기 가입(LOCAL/GOOGLE), 선택적 트레이너 배정, 회원권/결제/출석,
 -- 운동 루틴/기록, 시설 관리를 포함한 MVP 구조
 
+DROP TABLE IF EXISTS equipment_maintenance_logs;
+DROP TABLE IF EXISTS equipment;
+DROP TABLE IF EXISTS workout_sets;
+DROP TABLE IF EXISTS workout_sessions;
+DROP TABLE IF EXISTS routine_exercises;
+DROP TABLE IF EXISTS workout_routines;
+DROP TABLE IF EXISTS attendances;
+DROP TABLE IF EXISTS refunds;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS member_memberships;
+DROP TABLE IF EXISTS membership_products;
+DROP TABLE IF EXISTS trainer_assignments;
+DROP TABLE IF EXISTS trainers;
+DROP TABLE IF EXISTS members;
+DROP TABLE IF EXISTS user_oauth_accounts;
+DROP TABLE IF EXISTS user_local_credentials;
+DROP TABLE IF EXISTS users;
+
 CREATE TABLE users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) NULL,
@@ -44,6 +62,7 @@ CREATE TABLE members (
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(30) NOT NULL,
     birth_date DATE NULL,
+    gender VARCHAR(20) NULL,
     trainer_requested BOOLEAN NOT NULL DEFAULT FALSE,
     joined_at DATE NOT NULL,
     status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
@@ -52,6 +71,7 @@ CREATE TABLE members (
     CONSTRAINT uk_members_user UNIQUE (user_id),
     CONSTRAINT fk_members_user FOREIGN KEY (user_id) REFERENCES users (id),
     CONSTRAINT ck_members_status CHECK (status IN ('ACTIVE', 'SUSPENDED', 'WITHDRAWN')),
+    CONSTRAINT ck_members_gender CHECK (gender IS NULL OR gender IN ('MALE', 'FEMALE')),
     INDEX ix_members_name (name),
     INDEX ix_members_phone (phone),
     INDEX ix_members_trainer_requested (trainer_requested, status)

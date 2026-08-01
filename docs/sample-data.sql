@@ -29,11 +29,11 @@ INSERT INTO trainers (
     (1, 2, '김도윤', '010-2000-1000', '근력 향상·자세 교정', 'ACTIVE');
 
 INSERT INTO members (
-    id, user_id, name, phone, birth_date, trainer_requested, joined_at, status
+    id, user_id, name, phone, birth_date, gender, trainer_requested, joined_at, status
 ) VALUES
-    (1, 3, '김지훈', '010-3000-1000', '1994-08-17', TRUE, '2026-05-12', 'ACTIVE'),
-    (2, 4, '이서연', '010-3000-2000', '1997-03-21', TRUE, '2026-06-01', 'ACTIVE'),
-    (3, 5, '박민수', '010-3000-3000', '1991-11-02', FALSE, '2026-07-15', 'ACTIVE');
+    (1, 3, '김지훈', '010-3000-1000', '1994-08-17', 'MALE', TRUE, '2026-05-12', 'ACTIVE'),
+    (2, 4, '이서연', '010-3000-2000', '1997-03-21', 'FEMALE', TRUE, '2026-06-01', 'ACTIVE'),
+    (3, 5, '박민수', '010-3000-3000', '1991-11-02', 'MALE', FALSE, '2026-07-15', 'ACTIVE');
 
 INSERT INTO trainer_assignments (
     id, member_id, trainer_id, status, started_at, ended_at, assigned_by

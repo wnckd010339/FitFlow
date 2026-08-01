@@ -2,11 +2,9 @@ package com.acorn.gymmanagement.member.mapper;
 
 import com.acorn.gymmanagement.common.pagination.PageRequest;
 import com.acorn.gymmanagement.member.dto.request.MemberSearchRequest;
-import com.acorn.gymmanagement.member.dto.response.CurrentMembershipResponse;
-import com.acorn.gymmanagement.member.dto.response.MemberActivityResponse;
-import com.acorn.gymmanagement.member.dto.response.MemberDetailResponse;
-import com.acorn.gymmanagement.member.dto.response.MemberListResponse;
+import com.acorn.gymmanagement.member.dto.response.*;
 import com.acorn.gymmanagement.member.model.Member;
+import com.acorn.gymmanagement.member.model.MemberRegistration;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -42,4 +40,11 @@ public interface MemberMapper {
     List<MemberActivityResponse> findRecentActivities(
             @Param("memberId") Long memberId
     );
+
+    boolean existsByLoginId(@Param("loginId") String loginId);
+
+    int insertUser(MemberRegistration registration);
+    int insertLocalCredential(MemberRegistration registration);
+    int insertRegisteredMember(MemberRegistration registration);
+
 }
