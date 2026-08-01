@@ -14,7 +14,7 @@ public record CreateMemberRequest(
         String name,
 
         @NotBlank(message = "연락처를 입력해 주세요.")
-        @Pattern(regexp = "^01[016789]-?\\d{3,4}--?\\d{4}$",
+        @Pattern(regexp = "^01[016789]-?\\d{3,4}-?\\d{4}$",
                     message = "올바른 휴대전화 번호를 입력해 주세요.")
         String phone,
 

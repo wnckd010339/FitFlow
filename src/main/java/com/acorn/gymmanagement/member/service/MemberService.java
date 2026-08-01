@@ -4,14 +4,15 @@ import com.acorn.gymmanagement.common.exception.BusinessException;
 import com.acorn.gymmanagement.common.exception.ErrorCode;
 import com.acorn.gymmanagement.common.pagination.PageRequest;
 import com.acorn.gymmanagement.common.pagination.PageResult;
+import com.acorn.gymmanagement.member.dto.request.CreateMemberRequest;
 import com.acorn.gymmanagement.member.dto.request.MemberSearchRequest;
-import com.acorn.gymmanagement.member.dto.response.CurrentMembershipResponse;
-import com.acorn.gymmanagement.member.dto.response.MemberActivityResponse;
-import com.acorn.gymmanagement.member.dto.response.MemberDetailResponse;
-import com.acorn.gymmanagement.member.dto.response.MemberListResponse;
+import com.acorn.gymmanagement.member.dto.response.*;
 import com.acorn.gymmanagement.member.mapper.MemberMapper;
+import com.acorn.gymmanagement.member.model.MemberRegistration;
 import com.acorn.gymmanagement.member.view.MemberDetailView;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,7 @@ import java.util.List;
 public class MemberService {
 
     private final MemberMapper memberMapper;
-
+    private final PasswordEncoder passwordEncoder;
 
 
     public PageResult<MemberListResponse> search(
@@ -70,5 +71,106 @@ public class MemberService {
                 membership,
                 activities
         );
+    }
+
+    @Transactional
+    public CreateMemberResponse create(
+            CreateMemberRequest request
+    ) {
+        String loginId = normalizeLoginId(
+                request.loginId()
+        );
+
+        if(memberMapper.existsByLoginId(loginId)){
+            throw new BusinessException(
+                    ErrorCode.CONFLICT,
+                    "이미 사용 중인 로그인 ID입니다."
+            );
+        }
+
+        String passwordHash =
+                passwordEncoder.encode(
+                        request.initialPassword()
+                );
+
+        MemberRegistration registration =
+                new MemberRegistration(
+                        loginId,
+                        passwordHash,
+                        request.name().trim(),
+                        normalizePhone(request.phone()),
+                        request.birthDate(),
+                        request.gender(),
+                        request.trainerRequested()
+                );
+
+        validateInsert(
+                memberMapper.insertUser(registration),
+                "사용자 계쩡 생성에 실패했습니다."
+        );
+
+        try {
+            validateInsert (
+                    memberMapper.insertLocalCredential(registration),
+                    "로그인 정보 생성에 실패했습니다."
+            );
+        } catch (DuplicateKeyException exception) {
+            throw new BusinessException(
+                    ErrorCode.CONFLICT,
+                    "이미 사용 중인 로그인 ID입니다."
+            );
+        }
+
+        validateInsert(
+                memberMapper.insertRegisteredMember(registration),
+                "회원 정보 생성에 실패했습니다."
+        );
+
+        return new CreateMemberResponse(
+                registration.getMemberId(),
+                registration.getUserId(),
+                registration.getLoginId(),
+                registration.getName(),
+                "ACTIVE"
+        );
+
+
+    }
+
+    private String normalizeLoginId(String loginId){
+        return loginId.trim().toLowerCase();
+    }
+
+    private String normalizePhone(String phone) {
+        String digits =
+                phone.replaceAll("[^0-9]", "");
+
+        if (digits.length() == 11){
+            return digits.replaceFirst(
+                    "(\\d{3})(\\d{4})(\\d{4})",
+                    "$1-$2-$3"
+            );
+        }
+
+        if(digits.length() == 10){
+            return digits.replaceFirst(
+                    "(\\d{3})(\\d{4})(\\d{4})",
+                    "$1-$2-$3"
+            );
+        }
+
+        return phone.trim();
+    }
+
+    private void validateInsert(
+            int affectedRows,
+            String message
+    ) {
+        if (affectedRows != 1){
+            throw new BusinessException(
+                    ErrorCode.INTERNAL_ERROR,
+                    message
+            );
+        }
     }
 }

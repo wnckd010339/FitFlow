@@ -715,3 +715,346 @@ tbody tr:hover {
         padding: 24px 20px;
     }
 }
+
+/* Member registration modal */
+body.modal-open {
+    overflow: hidden;
+}
+
+.member-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(7, 26, 20, .58);
+    overscroll-behavior: contain;
+}
+
+.member-modal-backdrop[hidden] {
+    display: none;
+}
+
+.member-registration-modal {
+    width: min(700px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid rgba(221, 230, 226, .9);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(7, 26, 20, .3);
+}
+
+.member-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 28px 40px 22px;
+    border-bottom: 1px solid var(--line);
+}
+
+.member-modal-header h2,
+.member-modal-header p,
+.member-form-section h3,
+.member-registration-notice p {
+    margin: 0;
+}
+
+.member-modal-header h2 {
+    font-size: 24px;
+    line-height: 1.35;
+    letter-spacing: -.035em;
+}
+
+.member-modal-header p {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.member-modal-close {
+    display: grid;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    place-items: center;
+    color: var(--muted);
+    background: #eef3f1;
+    border: 0;
+    border-radius: 50%;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.member-modal-close:hover {
+    color: var(--text);
+    background: #e2ebe7;
+}
+
+.member-modal-close:focus-visible,
+.member-registration-field input:focus-visible,
+.member-registration-field select:focus-visible,
+.trainer-request-option:has(input:focus-visible),
+.member-modal-footer button:focus-visible {
+    outline: 3px solid rgba(11, 107, 79, .18);
+    outline-offset: 2px;
+}
+
+.member-modal-body {
+    max-height: calc(100vh - 254px);
+    overflow-y: auto;
+    padding: 28px 40px 26px;
+    scrollbar-gutter: stable;
+}
+
+.member-form-section h3 {
+    font-size: 17px;
+    letter-spacing: -.02em;
+}
+
+.member-account-section {
+    margin-top: 26px;
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+}
+
+.member-registration-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 24px;
+    margin-top: 20px;
+}
+
+.member-registration-field {
+    min-width: 0;
+}
+
+.member-registration-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.required-mark {
+    color: var(--danger);
+}
+
+.member-registration-field input,
+.member-registration-field select {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    outline: none;
+}
+
+.member-registration-field input::placeholder {
+    color: #98a49f;
+}
+
+.member-registration-field input:hover,
+.member-registration-field select:hover {
+    border-color: #bdccc6;
+}
+
+.member-registration-field input:focus,
+.member-registration-field select:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(11, 107, 79, .1);
+}
+
+.member-registration-field.has-error input,
+.member-registration-field.has-error select,
+.member-registration-field input[aria-invalid="true"],
+.member-registration-field select[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+.member-field-hint,
+.member-field-error {
+    margin: 6px 0 0;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.member-field-hint {
+    color: var(--muted);
+}
+
+.member-field-error {
+    min-height: 16px;
+    color: var(--danger);
+}
+
+.trainer-request-field {
+    min-width: 0;
+    margin: 26px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.trainer-request-field legend {
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.trainer-request-option {
+    position: relative;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    min-height: 74px;
+    padding: 15px 18px;
+    background: var(--background);
+    border: 1px solid transparent;
+    border-radius: 14px;
+    cursor: pointer;
+}
+
+.trainer-request-option:hover,
+.trainer-request-option:has(input:checked) {
+    background: #eef8f4;
+    border-color: #cde9df;
+}
+
+.trainer-request-option input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.trainer-request-control {
+    position: relative;
+    display: block;
+    width: 22px;
+    height: 22px;
+    background: var(--surface);
+    border: 1px solid #b9c8c2;
+    border-radius: 50%;
+}
+
+.trainer-request-option input:checked + .trainer-request-control {
+    background: var(--green);
+    border-color: var(--green);
+}
+
+.trainer-request-option input:checked + .trainer-request-control::after {
+    position: absolute;
+    inset: 6px;
+    background: #fff;
+    border-radius: 50%;
+    content: "";
+}
+
+.trainer-request-copy strong,
+.trainer-request-copy small {
+    display: block;
+}
+
+.trainer-request-copy strong {
+    font-size: 13px;
+}
+
+.trainer-request-copy small {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.member-registration-notice {
+    margin-top: 22px;
+    padding: 15px 20px;
+    color: #806b44;
+    background: var(--warning-bg);
+    border: 1px solid #f5dc9e;
+    border-radius: 12px;
+}
+
+.member-registration-notice strong {
+    color: #9b6b10;
+    font-size: 12px;
+}
+
+.member-registration-notice p {
+    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.member-registration-error {
+    margin: 18px 0 0;
+    padding: 12px 14px;
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.member-registration-error[hidden] {
+    display: none;
+}
+
+.member-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 40px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+}
+
+.member-modal-footer button {
+    min-width: 128px;
+}
+
+.member-modal-footer button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+@media (max-width: 720px) {
+    .member-modal-backdrop {
+        align-items: end;
+        padding: 0;
+    }
+
+    .member-registration-modal {
+        width: 100%;
+        max-height: calc(100vh - 20px);
+        border-radius: 24px 24px 0 0;
+    }
+
+    .member-modal-header,
+    .member-modal-body,
+    .member-modal-footer {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .member-modal-body {
+        max-height: calc(100vh - 230px);
+    }
+
+    .member-registration-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .member-modal-footer button {
+        flex: 1;
+        min-width: 0;
+    }
+}

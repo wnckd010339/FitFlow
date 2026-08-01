@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>회원 관리 | FitFlow</title>
     <link rel="stylesheet" th:href="@{/css/common/admin-layout.css}"
           href="/css/common/admin-layout.css">
@@ -19,7 +21,13 @@
                 <h1>회원 관리</h1>
                 <p>등록 회원을 검색하고 상태 및 이용 정보를 관리합니다.</p>
             </div>
-            <a class="primary-button" href="/admin/members/new">+ 신규 회원</a>
+            <button class="primary-button"
+                    id="open-member-registration"
+                    type="button"
+                    aria-haspopup="dialog"
+                    aria-controls="member-registration-modal">
+                + 신규 회원
+            </button>
         </header>
 
         <form class="search-panel"
@@ -237,6 +245,199 @@
         </section>
     </main>
 </div>
+
+<div class="member-modal-backdrop"
+     id="member-registration-modal"
+     hidden>
+    <section class="member-registration-modal"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="member-registration-title"
+             aria-describedby="member-registration-description"
+             tabindex="-1">
+        <header class="member-modal-header">
+            <div>
+                <h2 id="member-registration-title">신규 회원 등록</h2>
+                <p id="member-registration-description">
+                    회원 기본 정보와 로그인 계정을 생성합니다.
+                </p>
+            </div>
+
+            <button class="member-modal-close"
+                    id="close-member-registration"
+                    type="button"
+                    aria-label="신규 회원 등록 창 닫기">
+                <span aria-hidden="true">×</span>
+            </button>
+        </header>
+
+        <form id="member-registration-form" novalidate>
+            <div class="member-modal-body">
+                <section class="member-form-section"
+                         aria-labelledby="member-basic-information-title">
+                    <h3 id="member-basic-information-title">기본 정보</h3>
+
+                    <div class="member-registration-grid">
+                        <div class="member-registration-field">
+                            <label for="registration-name">
+                                이름 <span class="required-mark" aria-hidden="true">*</span>
+                            </label>
+                            <input id="registration-name"
+                                   name="name"
+                                   type="text"
+                                   maxlength="100"
+                                   autocomplete="name"
+                                   placeholder="회원 이름"
+                                   aria-describedby="registration-name-error"
+                                   required>
+                            <p class="member-field-error"
+                               id="registration-name-error"
+                               data-error-for="name"></p>
+                        </div>
+
+                        <div class="member-registration-field">
+                            <label for="registration-phone">
+                                연락처 <span class="required-mark" aria-hidden="true">*</span>
+                            </label>
+                            <input id="registration-phone"
+                                   name="phone"
+                                   type="tel"
+                                   maxlength="13"
+                                   autocomplete="tel"
+                                   inputmode="tel"
+                                   placeholder="010-0000-0000"
+                                   aria-describedby="registration-phone-error"
+                                   required>
+                            <p class="member-field-error"
+                               id="registration-phone-error"
+                               data-error-for="phone"></p>
+                        </div>
+
+                        <div class="member-registration-field">
+                            <label for="registration-birth-date">생년월일</label>
+                            <input id="registration-birth-date"
+                                   name="birthDate"
+                                   type="date"
+                                   autocomplete="bday"
+                                   aria-describedby="registration-birth-date-error">
+                            <p class="member-field-error"
+                               id="registration-birth-date-error"
+                               data-error-for="birthDate"></p>
+                        </div>
+
+                        <div class="member-registration-field">
+                            <label for="registration-gender">성별</label>
+                            <select id="registration-gender"
+                                    name="gender"
+                                    aria-describedby="registration-gender-error">
+                                <option value="">선택</option>
+                                <option value="MALE">남성</option>
+                                <option value="FEMALE">여성</option>
+                            </select>
+                            <p class="member-field-error"
+                               id="registration-gender-error"
+                               data-error-for="gender"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="member-form-section member-account-section"
+                         aria-labelledby="member-account-information-title">
+                    <h3 id="member-account-information-title">계정 정보</h3>
+
+                    <div class="member-registration-grid">
+                        <div class="member-registration-field">
+                            <label for="registration-login-id">
+                                로그인 ID <span class="required-mark" aria-hidden="true">*</span>
+                            </label>
+                            <input id="registration-login-id"
+                                   name="loginId"
+                                   type="text"
+                                   minlength="4"
+                                   maxlength="100"
+                                   autocomplete="off"
+                                   autocapitalize="none"
+                                   spellcheck="false"
+                                   placeholder="영문·숫자 조합"
+                                   aria-describedby="registration-login-id-hint registration-login-id-error"
+                                   required>
+                            <p class="member-field-hint"
+                               id="registration-login-id-hint">
+                                영문, 숫자, 마침표, 밑줄, 하이픈을 사용할 수 있습니다.
+                            </p>
+                            <p class="member-field-error"
+                               id="registration-login-id-error"
+                               data-error-for="loginId"></p>
+                        </div>
+
+                        <div class="member-registration-field">
+                            <label for="registration-password">
+                                초기 비밀번호 <span class="required-mark" aria-hidden="true">*</span>
+                            </label>
+                            <input id="registration-password"
+                                   name="initialPassword"
+                                   type="password"
+                                   minlength="8"
+                                   maxlength="100"
+                                   autocomplete="new-password"
+                                   placeholder="8자 이상 입력"
+                                   aria-describedby="registration-password-hint registration-password-error"
+                                   required>
+                            <p class="member-field-hint"
+                               id="registration-password-hint">
+                                회원이 첫 로그인 후 변경하도록 안내해 주세요.
+                            </p>
+                            <p class="member-field-error"
+                               id="registration-password-error"
+                               data-error-for="initialPassword"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <fieldset class="trainer-request-field">
+                    <legend>트레이너 상담 희망</legend>
+                    <label class="trainer-request-option">
+                        <input name="trainerRequested" type="checkbox">
+                        <span class="trainer-request-control" aria-hidden="true"></span>
+                        <span class="trainer-request-copy">
+                            <strong>상담을 희망합니다.</strong>
+                            <small>등록 후 트레이너 배정 대기 목록에 추가됩니다.</small>
+                        </span>
+                    </label>
+                </fieldset>
+
+                <aside class="member-registration-notice">
+                    <strong>등록 안내</strong>
+                    <p>
+                        초기 비밀번호는 회원에게 안전하게 전달하고 첫 로그인 후 변경하도록 안내합니다.
+                    </p>
+                </aside>
+
+                <p class="member-registration-error"
+                   id="member-registration-error"
+                   role="alert"
+                   hidden></p>
+            </div>
+
+            <footer class="member-modal-footer">
+                <button class="secondary-button"
+                        id="cancel-member-registration"
+                        type="button">
+                    취소
+                </button>
+                <button class="primary-button"
+                        id="submit-member-registration"
+                        type="submit">
+                    회원 등록
+                </button>
+            </footer>
+        </form>
+    </section>
+</div>
+
+<script th:src="@{/js/screens/admin-member-registration.js}"
+        src="/js/screens/admin-member-registration.js"
+        defer></script>
 
 </body>
 </html>

@@ -11,6 +11,7 @@
             name,
             phone,
             birth_date,
+            gender,
             trainer_requested,
             joined_at,
             status,
@@ -27,6 +28,7 @@
             name,
             phone,
             birth_date,
+            gender,
             trainer_requested,
             joined_at,
             status,
@@ -42,6 +44,7 @@
             name,
             phone,
             birth_date,
+            gender,
             trainer_requested,
             joined_at,
             status
@@ -51,6 +54,7 @@
             #{name},
             #{phone},
             #{birthDate},
+            #{gender},
             #{trainerRequested},
             #{joinedAt},
             #{status}
@@ -63,6 +67,7 @@
             name = #{name},
             phone = #{phone},
             birth_date = #{birthDate},
+            gender = #{gender},
             trainer_requested = #{trainerRequested},
             status = #{status},
             updated_at = CURRENT_TIMESTAMP
@@ -283,8 +288,48 @@
         )
         VALUES(
             NULL,
-            'MEMBER'
+            'MEMBER',
             'ACTIVE'
         )
     </insert>
+
+    <insert id="insertLocalCredential" parameterType="com.acorn.gymmanagement.member.model.MemberRegistration">
+        INSERT INTO user_local_credentials(
+            user_id,
+            login_id,
+            password_hash
+        )
+        VALUES (
+            #{userId},
+            #{loginId},
+            #{passwordHash}
+    </insert>
+
+    <insert id="insertRegisteredMember"
+            parameterType="com.acorn.gymmanagement.member.model.MemberRegistration"
+            useGeneratedKeys="true"
+            keyProperty="memberId"
+            keyColumn="id">
+        INSERT INTO members (
+            user_id,
+            name,
+            phone,
+            birth_date,
+            gender,
+            trainer_requested,
+            joined_at,
+            status
+        )
+        VALUES(
+            #{userId},
+            #{name},
+            #{phone},
+            #{birthDate},
+            #{gender},
+            #{trainerRequested},
+            CURRENT_DATE,
+            'ACTIVE'
+        )
+    </insert>
+
 </mapper>
