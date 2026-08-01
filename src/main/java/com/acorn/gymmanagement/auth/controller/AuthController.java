@@ -5,6 +5,7 @@ import com.acorn.gymmanagement.auth.service.AuthService;
 import com.acorn.gymmanagement.auth.service.SessionService;
 import com.acorn.gymmanagement.common.exception.BusinessException;
 import com.acorn.gymmanagement.security.SessionUser;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public String login(
+            HttpServletRequest request,
             HttpSession httpSession,
             @Valid @ModelAttribute("loginForm") LoginForm loginForm,
             BindingResult bindingResult,
@@ -57,6 +59,7 @@ public class AuthController {
 
         try{
             authService.login(httpSession, loginForm);
+            request.changeSessionId();
         } catch (BusinessException exception){
             model.addAttribute("redirect", redirect);
             model.addAttribute(
@@ -76,7 +79,7 @@ public class AuthController {
 
         String destination = safeRedirect(
                 redirect,
-                sessionUser.defaultRedirectPath()
+                sessionUser
         );
 
         return "redirect:" + destination;
@@ -91,15 +94,25 @@ public class AuthController {
 
     private String safeRedirect(
             String redirect,
-            String fallback
+            SessionUser sessionUser
     ){
-        if(redirect != null
-            && !redirect.isBlank()
-                && redirect.startsWith("/")
-                && !redirect.startsWith("//")){
-            return redirect;
+        if(redirect == null || redirect.isBlank()){
+            return sessionUser.defaultRedirectPath();
         }
 
-        return fallback;
+        if(!redirect.startsWith("/")
+                ||redirect.startsWith("//")
+                ||redirect.contains("\\")
+                ||redirect.contains("\r")
+                ||redirect.contains("\n")){
+            return sessionUser.defaultRedirectPath();
+        }
+        String path = redirect.split("\\?", 2)[0];
+
+        if(!sessionUser.canAccess(path)){
+            return sessionUser.defaultRedirectPath();
+        }
+
+        return redirect;
     }
 }
