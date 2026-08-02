@@ -39,11 +39,12 @@ public class MemberController {
             @RequestParam(defaultValue = "basic") String tab,
             Model model
      ){
+         String activeTab = "membership".equals(tab) ? "membership" : "basic";
          MemberDetailView detail =
                  memberService.findDetailView(memberId);
 
          model.addAttribute("detail", detail);
-         model.addAttribute("activeTab", tab);
+         model.addAttribute("activeTab", activeTab);
 
          return "admin/member/detail";
     }
