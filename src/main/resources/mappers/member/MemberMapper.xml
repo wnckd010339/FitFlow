@@ -61,6 +61,31 @@
         )
     </insert>
 
+    <update id="updateBasicInformation"
+            parameterType="com.acorn.gymmanagement.member.model.MemberUpdate">
+        UPDATE members
+        SET
+            name = #{name},
+            phone = #{phone},
+            birth_date = #{birthDate},
+            gender = #{gender},
+            status = #{status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{memberId}
+    </update>
+
+    <update id="updateUserStatus">
+        UPDATE users
+        SET
+            status = #{status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = (
+            SELECT user_id
+            FROM members
+            WHERE id = #{memberId}
+        )
+    </update>
+    
     <update id="update">
         UPDATE members
         SET
@@ -181,6 +206,7 @@
             lc.login_id,
             m.phone,
             m.birth_date,
+            m.gender,
             m.joined_at,
             m.status,
             u.last_login_at

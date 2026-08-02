@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>회원 상세 | FitFlow</title>
     <link rel="stylesheet" th:href="@{/css/common/admin-layout.css}"
           href="/css/common/admin-layout.css">
@@ -58,34 +60,107 @@
 
         <div class="detail-grid">
             <section class="detail-card basic-info" th:with="member=${detail.member}">
-                <h2>기본 정보</h2>
-                <form>
+                <div class="basic-info-heading">
+                    <h2>기본 정보</h2>
+                    <div class="basic-info-actions">
+                        <button class="secondary-button"
+                                id="edit-member-basic-information"
+                                type="button">
+                            수정
+                        </button>
+                        <button class="secondary-button"
+                                id="cancel-member-basic-information"
+                                type="button"
+                                hidden>
+                            취소
+                        </button>
+                        <button class="primary-button"
+                                id="save-member-basic-information"
+                                type="submit"
+                                form="member-basic-information-form"
+                                hidden>
+                            저장
+                        </button>
+                    </div>
+                </div>
+                <form id="member-basic-information-form"
+                      th:attr="data-member-id=${member.id}"
+                      novalidate>
                     <div class="form-grid">
                         <div class="field">
                             <label for="name">이름</label>
-                            <input id="name" type="text" th:value="${member.name}" value="김지훈" readonly>
+                            <input id="name"
+                                   name="name"
+                                   type="text"
+                                   maxlength="100"
+                                   autocomplete="name"
+                                   th:value="${member.name}"
+                                   value="김지훈"
+                                   aria-describedby="name-error"
+                                   readonly
+                                   required>
+                            <p class="member-field-error" id="name-error" data-error-for="name"></p>
                         </div>
                         <div class="field">
                             <label for="phone">연락처</label>
-                            <input id="phone" type="tel" th:value="${member.phone}" value="010-1234-5678" readonly>
+                            <input id="phone"
+                                   name="phone"
+                                   type="tel"
+                                   maxlength="13"
+                                   autocomplete="tel"
+                                   inputmode="numeric"
+                                   placeholder="010-0000-0000"
+                                   th:value="${member.phone}"
+                                   value="010-1234-5678"
+                                   aria-describedby="phone-error"
+                                   readonly
+                                   required>
+                            <p class="member-field-error" id="phone-error" data-error-for="phone"></p>
                         </div>
                         <div class="field">
                             <label for="birth-date">생년월일</label>
                             <input id="birth-date"
-                                   type="text"
-                                   th:value="${member.birthDate != null ? #temporals.format(member.birthDate, 'yyyy.MM.dd') : ''}"
-                                   value="1994.08.17"
+                                   name="birthDate"
+                                   type="date"
+                                   autocomplete="bday"
+                                   th:value="${member.birthDate != null ? #temporals.format(member.birthDate, 'yyyy-MM-dd') : ''}"
+                                   value="1994-08-17"
+                                   aria-describedby="birth-date-error"
                                    readonly>
+                            <p class="member-field-error" id="birth-date-error" data-error-for="birthDate"></p>
+                        </div>
+                        <div class="field">
+                            <label for="gender">성별</label>
+                            <select id="gender" name="gender" disabled>
+                                <option value=""
+                                        th:selected="${member.gender == null}">
+                                    선택 안 함
+                                </option>
+                                <option value="MALE"
+                                        th:selected="${member.gender != null && member.gender.name() == 'MALE'}">
+                                    남성
+                                </option>
+                                <option value="FEMALE"
+                                        th:selected="${member.gender != null && member.gender.name() == 'FEMALE'}">
+                                    여성
+                                </option>
+                            </select>
                         </div>
                         <div class="field">
                             <label for="status">회원 상태</label>
-                            <select id="status" disabled>
+                            <select id="status" name="status" disabled required>
                                 <option value="ACTIVE" th:selected="${member.status.name() == 'ACTIVE'}">활성</option>
                                 <option value="SUSPENDED" th:selected="${member.status.name() == 'SUSPENDED'}">정지</option>
                                 <option value="WITHDRAWN" th:selected="${member.status.name() == 'WITHDRAWN'}">탈퇴</option>
                             </select>
                         </div>
                     </div>
+
+                    <p class="basic-info-message"
+                       id="member-basic-information-message"
+                       role="status"
+                       tabindex="-1"
+                       hidden></p>
 
                     <div class="account-info">
                         <h3>계정 정보</h3>
@@ -169,5 +244,8 @@
         </div>
     </main>
 </div>
+<script th:src="@{/js/screens/admin-member-detail.js}"
+        src="/js/screens/admin-member-detail.js"
+        defer></script>
 </body>
 </html>

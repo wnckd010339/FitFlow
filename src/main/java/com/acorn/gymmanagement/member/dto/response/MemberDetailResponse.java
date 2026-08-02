@@ -1,5 +1,6 @@
 package com.acorn.gymmanagement.member.dto.response;
 
+import com.acorn.gymmanagement.member.model.MemberGender;
 import com.acorn.gymmanagement.member.model.MemberStatus;
 
 import java.time.LocalDate;
@@ -11,6 +12,7 @@ public record MemberDetailResponse(
         String loginId,
         String phone,
         LocalDate birthDate,
+        MemberGender gender,
         LocalDate joinedAt,
         MemberStatus status,
         LocalDateTime lastLoginAt

@@ -468,6 +468,55 @@ tbody tr:hover {
     opacity: 1;
 }
 
+.basic-info-heading,
+.basic-info-actions {
+    display: flex;
+    align-items: center;
+}
+
+.basic-info-heading {
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.basic-info-actions {
+    gap: 8px;
+}
+
+.basic-info-actions button {
+    min-width: 76px;
+    min-height: 38px;
+}
+
+.basic-info .field.has-error input,
+.basic-info .field.has-error select,
+.basic-info .field [aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+.basic-info-message {
+    margin: 20px 0 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.basic-info-message.is-success {
+    color: var(--green);
+    background: #eef8f4;
+}
+
+.basic-info-message.is-error {
+    color: var(--danger);
+    background: var(--danger-bg);
+}
+
+.basic-info-message[hidden],
+.basic-info-actions button[hidden] {
+    display: none;
+}
+
 .detail-card {
     padding: 30px 32px;
     border-radius: 20px;

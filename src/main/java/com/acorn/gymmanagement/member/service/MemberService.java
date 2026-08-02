@@ -6,9 +6,11 @@ import com.acorn.gymmanagement.common.pagination.PageRequest;
 import com.acorn.gymmanagement.common.pagination.PageResult;
 import com.acorn.gymmanagement.member.dto.request.CreateMemberRequest;
 import com.acorn.gymmanagement.member.dto.request.MemberSearchRequest;
+import com.acorn.gymmanagement.member.dto.request.UpdateMemberRequest;
 import com.acorn.gymmanagement.member.dto.response.*;
 import com.acorn.gymmanagement.member.mapper.MemberMapper;
 import com.acorn.gymmanagement.member.model.MemberRegistration;
+import com.acorn.gymmanagement.member.model.MemberUpdate;
 import com.acorn.gymmanagement.member.view.MemberDetailView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
@@ -154,7 +156,7 @@ public class MemberService {
 
         if(digits.length() == 10){
             return digits.replaceFirst(
-                    "(\\d{3})(\\d{4})(\\d{4})",
+                    "(\\d{3})(\\d{3})(\\d{4})",
                     "$1-$2-$3"
             );
         }
@@ -167,6 +169,48 @@ public class MemberService {
             String message
     ) {
         if (affectedRows != 1){
+            throw new BusinessException(
+                    ErrorCode.INTERNAL_ERROR,
+                    message
+            );
+        }
+    }
+
+    @Transactional
+    public MemberDetailResponse updateBasicInformation(
+            Long memberId,
+            UpdateMemberRequest request
+    ) {
+        memberMapper.findById(memberId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "회원을 찾을 수 없습니다."
+                ));
+
+        MemberUpdate update =new MemberUpdate(
+                memberId,
+                request.name().trim(),
+                normalizePhone(request.phone()),
+                request.birthDate(),
+                request.gender(),
+                request.status()
+        );
+
+        validateUpdate(
+                memberMapper.updateBasicInformation(update),
+                "회원 기본 정보 수집에 실패했습니다."
+        );
+
+        validateUpdate(
+                memberMapper.updateUserStatus(memberId, request.status()),
+                "회원 계정 상태 수정에 실패했습니다."
+        );
+
+        return findDetailResponseById(memberId);
+    }
+
+    private void validateUpdate(int affectedRows, String message){
+        if(affectedRows != 1){
             throw new BusinessException(
                     ErrorCode.INTERNAL_ERROR,
                     message

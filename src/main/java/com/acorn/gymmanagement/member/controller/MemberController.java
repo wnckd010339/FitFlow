@@ -10,10 +10,7 @@ import com.acorn.gymmanagement.member.view.MemberDetailView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -39,12 +36,14 @@ public class MemberController {
      @GetMapping("/{memberId}")
     public String detail(
             @PathVariable Long memberId,
+            @RequestParam(defaultValue = "basic") String tab,
             Model model
      ){
          MemberDetailView detail =
                  memberService.findDetailView(memberId);
 
          model.addAttribute("detail", detail);
+         model.addAttribute("activeTab", tab);
 
          return "admin/member/detail";
     }

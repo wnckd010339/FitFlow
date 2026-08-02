@@ -2,7 +2,9 @@ package com.acorn.gymmanagement.member.controller;
 
 import com.acorn.gymmanagement.common.response.ApiResponse;
 import com.acorn.gymmanagement.member.dto.request.CreateMemberRequest;
+import com.acorn.gymmanagement.member.dto.request.UpdateMemberRequest;
 import com.acorn.gymmanagement.member.dto.response.CreateMemberResponse;
+import com.acorn.gymmanagement.member.dto.response.MemberDetailResponse;
 import com.acorn.gymmanagement.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +37,21 @@ public class MemberApiController {
                                 response
                         )
                 );
+    }
+
+    @PatchMapping("/{memberId}fhr")
+    public ResponseEntity<ApiResponse<MemberDetailResponse>> updateBasicInformation (
+            @PathVariable Long memberId,
+            @Valid @RequestBody UpdateMemberRequest request
+            ){
+        MemberDetailResponse response =
+                memberService.updateBasicInformation(memberId, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "회원 기본 정보가 수정되었습니다.",
+                        response
+                )
+        );
     }
 }

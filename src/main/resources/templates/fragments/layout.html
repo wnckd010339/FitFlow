@@ -19,10 +19,21 @@
     </nav>
     <div class="sidebar-profile">
         <div class="avatar">관</div>
-        <div>
+        <div class="sidebar-profile-copy">
             <strong>FitFlow 관리자</strong>
             <span>슈퍼 관리자</span>
         </div>
+
+        <form class="sidebar-logout-form"
+              th:action="@{/logout}"
+              action="/logout"
+              method="post">
+            <button class="sidebar-logout-button"
+                    type="submit"
+                    aria-label="관리자 계정 로그아웃">
+                로그아웃
+            </button>
+        </form>
     </div>
 </aside>
 </body>

@@ -5,6 +5,8 @@ import com.acorn.gymmanagement.member.dto.request.MemberSearchRequest;
 import com.acorn.gymmanagement.member.dto.response.*;
 import com.acorn.gymmanagement.member.model.Member;
 import com.acorn.gymmanagement.member.model.MemberRegistration;
+import com.acorn.gymmanagement.member.model.MemberStatus;
+import com.acorn.gymmanagement.member.model.MemberUpdate;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -47,4 +49,10 @@ public interface MemberMapper {
     int insertLocalCredential(MemberRegistration registration);
     int insertRegisteredMember(MemberRegistration registration);
 
+    int updateBasicInformation(MemberUpdate update);
+
+    int updateUserStatus(
+            @Param("memberId") Long memberId,
+            @Param("status") MemberStatus status
+    );
 }
