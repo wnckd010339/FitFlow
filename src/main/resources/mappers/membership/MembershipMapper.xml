@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.acorn.gymmanagement.membership.mapper.MembershipMapper">
+
+    <resultMap id="MemberMembershipResultMap"
+               type="com.acorn.gymmanagement.membership.dto.response.MemberMembershipResponse">
+        <constructor>
+            <idArg name="membershipId" column="membership_id" javaType="java.lang.Long" />
+            <arg name="productId" column="product_id" javaType="java.lang.Long" />
+            <arg name="productName" column="product_name" javaType="java.lang.String" />
+            <arg name="productType" column="product_type" javaType="com.acorn.gymmanagement.membership.model.MembershipProductType" />
+            <arg name="startDate" column="start_date" javaType="java.time.LocalDate" />
+            <arg name="endDate" column="end_date" javaType="java.time.LocalDate" />
+            <arg name="remainingDays" column="remaining_days" javaType="java.lang.Integer" />
+            <arg name="remainingPtSessions" column="remaining_pt_sessions" javaType="java.lang.Integer" />
+            <arg name="status" column="status" javaType="com.acorn.gymmanagement.membership.model.MembershipStatus" />
+            <arg name="createdAt" column="created_at" javaType="java.time.LocalDateTime" />
+        </constructor>
+    </resultMap>
+
+    <resultMap id="MembershipProductOptionResultMap"
+               type="com.acorn.gymmanagement.membership.dto.response.MembershipProductOptionResponse">
+        <constructor>
+            <idArg name="productId" column="product_id" javaType="java.lang.Long"/>
+            <arg name="name" column="name" javaType="java.lang.String"/>
+            <arg name="productType" column="product_type" javaType="com.acorn.gymmanagement.membership.model.MembershipProductType"/>
+            <arg name="durationDays" column="duration_days" javaType="java.lang.Integer"/>
+            <arg name="price" column="price" javaType="java.math.BigDecimal"/>
+            <arg name="ptSessionCount" column="pt_session_count" javaType="java.lang.Integer"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="MembershipProductResultMap"
+               type="com.acorn.gymmanagement.membership.model.MembershipProduct">
+        <constructor>
+            <idArg name="id" column="id" javaType="java.lang.Long"/>
+            <arg name="name" column="name" javaType="java.lang.String"/>
+            <arg name="productType" column="product_type" javaType="com.acorn.gymmanagement.membership.model.MembershipProductType"/>
+            <arg name="durationDays" column="duration_days" javaType="java.lang.Integer"/>
+            <arg name="price" column="price" javaType="java.math.BigDecimal"/>
+            <arg name="ptSessionCount" column="pt_session_count" javaType="java.lang.Integer"/>
+            <arg name="status" column="status" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+
+    <select id="findAllByMemberId"
+            resultMap="MemberMembershipResultMap">
+        SELECT
+            mm.id AS membership_id,
+            mm.product_id,
+            mp.name AS product_name,
+            mp.product_type,
+            mm.start_date,
+            mm.end_date,
+            GREATEST(
+                DATEDIFF(mm.end_date, CURRENT_DATE),
+                0
+            ) AS remaining_days,
+            mm.remaining_pt_sessions,
+            CASE
+                WHEN mm.status = 'ACTIVE'
+                AND mm.end_date &lt; CURRENT_DATE
+                    THEN 'EXPIRED'
+                ELSE mm.status
+            END AS status,
+            mm.created_at
+        FROM member_memberships mm
+        JOIN membership_products mp
+            ON mp.id = mm.product_id
+        WHERE mm.member_id = #{memberId}
+        ORDER BY mm.start_date DESC, mm.id DESC
+    </select>
+
+    <select id="findById"
+            resultMap="MemberMembershipResultMap">
+        SELECT
+            mm.id AS membership_id,
+            mm.product_id,
+            mp.name AS product_name,
+            mp.product_type,
+            mm.start_date,
+            mm.end_date,
+            GREATEST(
+                DATEDIFF(mm.end_date, CURRENT_DATE),
+                0
+            ) AS remaining_days,
+            mm.remaining_pt_sessions,
+            CASE
+                WHEN mm.status = 'ACTIVE'
+                AND mm.end_date &lt; CURRENT_DATE
+                    THEN 'EXPIRED'
+                ELSE mm.status
+            END AS status,
+            mm.created_at
+        FROM member_memberships mm
+        JOIN membership_products mp
+            ON mp.id = mm.product_id
+        WHERE mm.member_id = #{memberId}
+            AND mm.id = #{membershipId}
+    </select>
+
+    <select id="findActiveProducts"
+            resultMap="MembershipProductOptionResultMap">
+        SELECT
+            id AS product_id,
+            name,
+            product_type,
+            duration_days,
+            price,
+            pt_session_count
+        FROM membership_products
+        WHERE status = 'ACTIVE'
+        ORDER BY product_type, duration_days, price
+    </select>
+
+    <select id="findActiveProductById"
+            resultMap="MembershipProductResultMap">
+        SELECT
+            id,
+            name,
+            product_type,
+            duration_days,
+            price,
+            pt_session_count,
+            status
+        FROM membership_products
+        WHERE id = #{productId}
+            AND status = 'ACTIVE'
+    </select>
+
+    <select id="existsMemberById"
+            resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM members
+            WHERE id = #{memberId}
+              AND status != 'WITHDRAWN'
+        )
+    </select>
+
+    <select id="existsOverlappingMembership"
+            resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM member_memberships
+            WHERE member_id = #{memberId}
+             AND status IN (
+                'PENDING_PAYMENT',
+                'ACTIVE',
+                'PAUSED'
+            )
+            AND start_date &lt;= #{endDate}
+            AND end_date &gt;= #{startDate}
+        )
+    </select>
+
+    <insert id="insertMemberMembership"
+            parameterType="com.acorn.gymmanagement.membership.model.MemberMembershipRegistration"
+            useGeneratedKeys="true"
+            keyProperty="membershipId"
+            keyColumn="id">
+        INSERT INTO member_memberships (
+            member_id,
+            product_id,
+            start_date,
+            end_date,
+            remaining_pt_sessions,
+            status
+        )
+        VALUES (
+            #{memberId},
+            #{productId},
+            #{startDate},
+            #{endDate},
+            #{remainingPtSessions},
+            #{status}
+        )
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE member_memberships
+        SET
+            status = #{status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{membershipId}
+            AND member_id = #{memberId}
+    </update>
+</mapper>

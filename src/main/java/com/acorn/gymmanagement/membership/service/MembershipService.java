@@ -1,4 +1,186 @@
 package com.acorn.gymmanagement.membership.service;
+import com.acorn.gymmanagement.common.exception.BusinessException;
+import com.acorn.gymmanagement.common.exception.ErrorCode;
+import com.acorn.gymmanagement.membership.dto.request.CreateMemberMembershipRequest;
+import com.acorn.gymmanagement.membership.dto.response.MemberMembershipResponse;
+import com.acorn.gymmanagement.membership.dto.response.MembershipProductOptionResponse;
+import com.acorn.gymmanagement.membership.mapper.MembershipMapper;
+import com.acorn.gymmanagement.membership.model.MemberMembershipRegistration;
+import com.acorn.gymmanagement.membership.model.MembershipProduct;
+import com.acorn.gymmanagement.membership.model.MembershipStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
-public class MembershipService { }
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class MembershipService {
+
+    private final MembershipMapper membershipMapper;
+
+    public List<MemberMembershipResponse> findAllByMemberId(Long memberId) {
+        validateMember(memberId);
+        return membershipMapper.findAllByMemberId(memberId);
+    }
+
+    public List<MembershipProductOptionResponse> findActiveProducts() {
+        return membershipMapper.findActiveProducts();
+    }
+
+    @Transactional
+    public MemberMembershipResponse create(
+            Long memberId,
+            CreateMemberMembershipRequest request
+    ) {
+        validateMember(memberId);
+
+        MembershipProduct product = membershipMapper
+                .findActiveProductById(request.productId())
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "등록 가능한 회원권 상품을 찾을 수 없습니다."
+                ));
+
+        LocalDate endDate = request.startDate()
+                .plusDays(product.durationDays() - 1L);
+
+        if (membershipMapper.existsOverlappingMembership(
+                memberId,
+                request.startDate(),
+                endDate
+        )) {
+            throw new BusinessException(
+                    ErrorCode.CONFLICT,
+                    "해당 기간과 겹치는 회원권이 있습니다."
+            );
+        }
+
+        MemberMembershipRegistration registration =
+                new MemberMembershipRegistration(
+                        memberId,
+                        product.id(),
+                        request.startDate(),
+                        endDate,
+                        product.ptSessionCount(),
+                        MembershipStatus.PENDING_PAYMENT
+                );
+
+        validateAffectedRows(
+                membershipMapper.insertMemberMembership(registration),
+                "회원권 등록에 실패했습니다."
+        );
+
+        return findMembership(memberId, registration.getMembershipId());
+    }
+
+    @Transactional
+    public MemberMembershipResponse pause(
+            Long memberId,
+            Long membershipId
+    ) {
+        return changeStatus(
+                memberId,
+                membershipId,
+                MembershipStatus.ACTIVE,
+                MembershipStatus.PAUSED
+        );
+    }
+
+    @Transactional
+    public MemberMembershipResponse resume(
+            Long memberId,
+            Long membershipId
+    ) {
+        return changeStatus(
+                memberId,
+                membershipId,
+                MembershipStatus.PAUSED,
+                MembershipStatus.ACTIVE
+        );
+    }
+
+    @Transactional
+    public MemberMembershipResponse cancel(
+            Long memberId,
+            Long membershipId
+    ) {
+        MemberMembershipResponse membership = findMembership(memberId, membershipId);
+
+        if (membership.status() != MembershipStatus.PENDING_PAYMENT
+                && membership.status() != MembershipStatus.ACTIVE
+                && membership.status() != MembershipStatus.PAUSED) {
+            throw invalidTransition(membership.status(), MembershipStatus.CANCELLED);
+        }
+
+        validateAffectedRows(
+                membershipMapper.updateStatus(
+                        memberId,
+                        membershipId,
+                        MembershipStatus.CANCELLED
+                ),
+                "회원권 취소에 실패했습니다."
+        );
+
+        return findMembership(memberId, membershipId);
+    }
+
+    private MemberMembershipResponse changeStatus(
+            Long memberId,
+            Long membershipId,
+            MembershipStatus expected,
+            MembershipStatus target
+    ) {
+        MemberMembershipResponse membership = findMembership(memberId, membershipId);
+
+        if (membership.status() != expected) {
+            throw invalidTransition(membership.status(), target);
+        }
+
+        validateAffectedRows(
+                membershipMapper.updateStatus(memberId, membershipId, target),
+                "회원권 상태 변경에 실패했습니다."
+        );
+
+        return findMembership(memberId, membershipId);
+    }
+
+    private MemberMembershipResponse findMembership(
+            Long memberId,
+            Long membershipId
+    ) {
+        return membershipMapper.findById(memberId, membershipId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "회원권을 찾을 수 없습니다."
+                ));
+    }
+
+    private void validateMember(Long memberId) {
+        if (!membershipMapper.existsMemberById(memberId)) {
+            throw new BusinessException(
+                    ErrorCode.NOT_FOUND,
+                    "회원을 찾을 수 없거나 탈퇴한 회원입니다."
+            );
+        }
+    }
+
+    private void validateAffectedRows(int affectedRows, String message) {
+        if (affectedRows != 1) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, message);
+        }
+    }
+
+    private BusinessException invalidTransition(
+            MembershipStatus current,
+            MembershipStatus target
+    ) {
+        return new BusinessException(
+                ErrorCode.CONFLICT,
+                "회원권 상태를 " + current + "에서 " + target + "(으)로 변경할 수 없습니다."
+        );
+    }
+}

@@ -49,6 +49,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/members/**")
                         .hasRole(SessionUser.ROLE_ADMIN)
 
+                        .requestMatchers("/api/membership-products/**")
+                        .hasRole(SessionUser.ROLE_ADMIN)
+
                         .requestMatchers("/api/**")
                         .authenticated()
 

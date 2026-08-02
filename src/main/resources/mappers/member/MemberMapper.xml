@@ -3,8 +3,83 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.acorn.gymmanagement.member.mapper.MemberMapper">
 
+    <resultMap id="MemberResultMap"
+               type="com.acorn.gymmanagement.member.model.Member">
+        <constructor>
+            <idArg name="id" column="id" javaType="java.lang.Long"/>
+            <arg name="userId" column="user_id" javaType="java.lang.Long"/>
+            <arg name="name" column="name" javaType="java.lang.String"/>
+            <arg name="phone" column="phone" javaType="java.lang.String"/>
+            <arg name="joinedAt" column="joined_at" javaType="java.time.LocalDate"/>
+            <arg name="status" column="status"
+                 javaType="com.acorn.gymmanagement.member.model.MemberStatus"/>
+            <arg name="createdAt" column="created_at" javaType="java.time.LocalDateTime"/>
+            <arg name="updatedAt" column="updated_at" javaType="java.time.LocalDateTime"/>
+            <arg name="birthDate" column="birth_date" javaType="java.time.LocalDate"/>
+            <arg name="gender" column="gender"
+                 javaType="com.acorn.gymmanagement.member.model.MemberGender"/>
+            <arg name="trainerRequested" column="trainer_requested" javaType="_boolean"/>
+        </constructor>
+    </resultMap>
 
-    <select id="findAll" resultType="com.acorn.gymmanagement.member.model.Member">
+    <resultMap id="MemberListResponseResultMap"
+               type="com.acorn.gymmanagement.member.dto.response.MemberListResponse">
+        <constructor>
+            <idArg name="id" column="id" javaType="java.lang.Long"/>
+            <arg name="name" column="name" javaType="java.lang.String"/>
+            <arg name="loginId" column="login_id" javaType="java.lang.String"/>
+            <arg name="phone" column="phone" javaType="java.lang.String"/>
+            <arg name="status" column="status"
+                 javaType="com.acorn.gymmanagement.member.model.MemberStatus"/>
+            <arg name="membershipName" column="membership_name" javaType="java.lang.String"/>
+            <arg name="remainingDays" column="remaining_days" javaType="java.lang.Integer"/>
+            <arg name="trainerName" column="trainer_name" javaType="java.lang.String"/>
+            <arg name="lastAttendanceAt" column="last_attendance_at"
+                 javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="MemberDetailResponseResultMap"
+               type="com.acorn.gymmanagement.member.dto.response.MemberDetailResponse">
+        <constructor>
+            <idArg name="id" column="id" javaType="java.lang.Long"/>
+            <arg name="name" column="name" javaType="java.lang.String"/>
+            <arg name="loginId" column="login_id" javaType="java.lang.String"/>
+            <arg name="phone" column="phone" javaType="java.lang.String"/>
+            <arg name="birthDate" column="birth_date" javaType="java.time.LocalDate"/>
+            <arg name="gender" column="gender"
+                 javaType="com.acorn.gymmanagement.member.model.MemberGender"/>
+            <arg name="joinedAt" column="joined_at" javaType="java.time.LocalDate"/>
+            <arg name="status" column="status"
+                 javaType="com.acorn.gymmanagement.member.model.MemberStatus"/>
+            <arg name="lastLoginAt" column="last_login_at"
+                 javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="CurrentMembershipResponseResultMap"
+               type="com.acorn.gymmanagement.member.dto.response.CurrentMembershipResponse">
+        <constructor>
+            <idArg name="membershipId" column="membership_id" javaType="java.lang.Long"/>
+            <arg name="membershipName" column="membership_name" javaType="java.lang.String"/>
+            <arg name="startDate" column="start_date" javaType="java.time.LocalDate"/>
+            <arg name="endDate" column="end_date" javaType="java.time.LocalDate"/>
+            <arg name="remainingDays" column="remaining_days" javaType="java.lang.Integer"/>
+            <arg name="usagePercent" column="usage_percent" javaType="java.lang.Integer"/>
+            <arg name="status" column="status" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="MemberActivityResponseResultMap"
+               type="com.acorn.gymmanagement.member.dto.response.MemberActivityResponse">
+        <constructor>
+            <arg name="activityType" column="activity_type" javaType="java.lang.String"/>
+            <arg name="description" column="description" javaType="java.lang.String"/>
+            <arg name="occurredAt" column="occurred_at" javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <select id="findAll" resultMap="MemberResultMap">
         SELECT
             id,
             user_id,
@@ -21,7 +96,7 @@
         ORDER BY id DESC
     </select>
 
-    <select id="findById" resultType="com.acorn.gymmanagement.member.model.Member">
+    <select id="findById" resultMap="MemberResultMap">
         SELECT
             id,
             user_id,
@@ -113,6 +188,7 @@
                 FROM member_memberships mm2
                 WHERE mm2.member_id = m.id
                     AND mm2.status = 'ACTIVE'
+                    AND mm2.start_date &lt;= CURRENT_DATE
                     AND mm2.end_date >= CURRENT_DATE
                 ORDER BY mm2.end_date ASC, mm2.id DESC
                 LIMIT 1
@@ -174,7 +250,7 @@
     </sql>
 
     <select id="search"
-            resultType="com.acorn.gymmanagement.member.dto.response.MemberListResponse">
+            resultMap="MemberListResponseResultMap">
         SELECT
             m.id,
             m.name,
@@ -199,7 +275,7 @@
     </select>
 
     <select id="findDetailById"
-            resultType="com.acorn.gymmanagement.member.dto.response.MemberDetailResponse">
+            resultMap="MemberDetailResponseResultMap">
         SELECT
             m.id,
             m.name,
@@ -219,7 +295,7 @@
     </select>
 
     <select id="findCurrentMembership"
-            resultType="com.acorn.gymmanagement.member.dto.response.CurrentMembershipResponse">
+            resultMap="CurrentMembershipResponseResultMap">
         SELECT
             mm.id AS membership_id,
             mp.name AS membership_name,
@@ -243,13 +319,14 @@
             ON mp.id = mm.product_id
         WHERE mm.member_id = #{memberId}
           AND mm.status = 'ACTIVE'
+          AND mm.start_date &lt;= CURRENT_DATE
           AND mm.end_date >= CURRENT_DATE
         ORDER BY mm.end_date ASC, mm.id DESC
         LIMIT 1
     </select>
 
     <select id="findRecentActivities"
-            resultType="com.acorn.gymmanagement.member.dto.response.MemberActivityResponse">
+            resultMap="MemberActivityResponseResultMap">
         SELECT
             activity_type,
             description,
