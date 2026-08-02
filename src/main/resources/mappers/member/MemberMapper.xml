@@ -303,6 +303,7 @@
             #{userId},
             #{loginId},
             #{passwordHash}
+        )
     </insert>
 
     <insert id="insertRegisteredMember"
