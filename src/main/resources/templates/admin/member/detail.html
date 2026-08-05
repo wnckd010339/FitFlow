@@ -20,7 +20,7 @@
             <div>
                 <a class="back-link" href="/admin/members">← 회원 목록</a>
                 <h1>회원 상세</h1>
-                <p>회원 정보와 이용 이력을 한 화면에서 확인합니다.</p>
+                <p>회원 기본 정보와 회원권 현황을 확인하고 관리합니다.</p>
             </div>
         </header>
 
@@ -59,9 +59,6 @@
                th:classappend="${activeTab == 'membership'} ? 'active'"
                th:attr="aria-current=${activeTab == 'membership'} ? 'page' : null">
                 회원권</a>
-            <span aria-disabled="true">결제</span>
-            <span aria-disabled="true">출석</span>
-            <span aria-disabled="true">트레이너 배정</span>
         </nav>
 
         <div class="detail-grid" th:if="${activeTab == 'basic'}">
@@ -192,11 +189,17 @@
                          th:with="membership=${detail.currentMembership}">
                     <div class="card-heading">
                         <h2>현재 회원권</h2>
-                        <span class="badge"
-                              th:classappend="${membership.status == 'ACTIVE'} ? 'badge-active' : 'badge-warning'"
-                              th:text="${membership.status == 'ACTIVE'} ? '이용 중' : membership.status">
-                            이용 중
-                        </span>
+                        <div class="card-heading-actions">
+                            <a class="card-text-link"
+                               th:href="@{/admin/memberships(memberId=${detail.member.id}, view='history')}">
+                                결제 내역 보기
+                            </a>
+                            <span class="badge"
+                                  th:classappend="${membership.status == 'ACTIVE'} ? 'badge-active' : 'badge-warning'"
+                                  th:text="${membership.status == 'ACTIVE'} ? '이용 중' : membership.status">
+                                이용 중
+                            </span>
+                        </div>
                     </div>
                     <strong th:text="${membership.membershipName}">3개월 자유 이용권</strong>
                     <p>
@@ -220,7 +223,13 @@
 
                 <section class="detail-card membership-card empty-detail-card"
                          th:if="${detail.currentMembership == null}">
-                    <h2>현재 회원권</h2>
+                    <div class="card-heading">
+                        <h2>현재 회원권</h2>
+                        <a class="card-text-link"
+                           th:href="@{/admin/memberships(memberId=${detail.member.id}, view='payment')}">
+                            결제 관리로 이동
+                        </a>
+                    </div>
                     <div class="detail-empty">
                         <strong>이용 중인 회원권이 없습니다.</strong>
                         <p>회원권을 등록하면 이용 기간과 잔여일이 표시됩니다.</p>
@@ -228,7 +237,13 @@
                 </section>
 
                 <section class="detail-card activity-card">
-                    <h2>최근 활동</h2>
+                    <div class="card-heading">
+                        <h2>최근 활동</h2>
+                        <a class="card-text-link"
+                           th:href="@{/admin/memberships(memberId=${detail.member.id}, view='history')}">
+                            결제 내역 보기
+                        </a>
+                    </div>
                     <ul th:if="${!#lists.isEmpty(detail.recentActivities)}">
                         <li th:each="activity : ${detail.recentActivities}">
                             <i></i>
@@ -257,9 +272,15 @@
                     <h2>회원권 관리</h2>
                     <p>회원권 이용 이력을 확인하고 상태를 관리합니다.</p>
                 </div>
-                <button class="primary-button" id="open-membership-modal" type="button">
-                    + 회원권 등록
-                </button>
+                <div class="membership-panel-actions">
+                    <a class="secondary-button payment-management-link"
+                       th:href="@{/admin/memberships(memberId=${detail.member.id}, view='history')}">
+                        결제 내역 보기
+                    </a>
+                    <button class="primary-button" id="open-membership-modal" type="button">
+                        + 회원권 등록
+                    </button>
+                </div>
             </div>
 
             <p class="membership-feedback" id="membership-feedback" role="status" tabindex="-1" hidden></p>
