@@ -1,8 +1,21 @@
 package com.acorn.gymmanagement.attendance.mapper;
 
+import com.acorn.gymmanagement.attendance.dto.request.AttendanceSearchCondition;
+import com.acorn.gymmanagement.attendance.dto.response.AttendanceListResponse;
+import com.acorn.gymmanagement.attendance.dto.response.AttendanceSummaryResponse;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface AttendanceMapper {
-    // TODO: 출석 DB 메서드 정의
+    AttendanceSummaryResponse findSummary(LocalDate date);
+    List<AttendanceListResponse> findCurrentAttendances(AttendanceSearchCondition condition);
+    List<AttendanceListResponse> findHistory(AttendanceSearchCondition condition);
+    Optional<AttendanceListResponse> findOpenAttendanceForUpdate(Long attendanceId);
+    int checkout(@Param("attendanceId") Long attendanceId, @Param("checkedOutAt") LocalDateTime checkedOutAt);
 }

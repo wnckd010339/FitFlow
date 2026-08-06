@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acorn.gymmanagement.attendance.mapper.AttendanceMapper">
+    <resultMap id="AttendanceResult" type="com.acorn.gymmanagement.attendance.dto.response.AttendanceListResponse">
+        <constructor>
+            <idArg name="attendanceId" column="attendance_id" javaType="java.lang.Long"/>
+            <arg name="memberId" column="member_id" javaType="java.lang.Long"/>
+            <arg name="memberName" column="member_name" javaType="java.lang.String"/>
+            <arg name="phone" column="phone" javaType="java.lang.String"/>
+            <arg name="membershipName" column="membership_name" javaType="java.lang.String"/>
+            <arg name="attendanceDate" column="attendance_date" javaType="java.time.LocalDate"/>
+            <arg name="checkedInAt" column="checked_in_at" javaType="java.time.LocalDateTime"/>
+            <arg name="checkedOutAt" column="checked_out_at" javaType="java.time.LocalDateTime"/>
+            <arg name="durationMinutes" column="duration_minutes" javaType="java.lang.Long"/>
+            <arg name="status" column="attendance_status" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+
+    <sql id="attendanceColumns">
+        SELECT a.id AS attendance_id, a.member_id, m.name AS member_name, m.phone,
+               mp.name AS membership_name, a.attendance_date, a.checked_in_at, a.checked_out_at,
+               TIMESTAMPDIFF(MINUTE, a.checked_in_at, COALESCE(a.checked_out_at, CURRENT_TIMESTAMP)) AS duration_minutes,
+               CASE WHEN a.checked_out_at IS NULL THEN 'IN_CENTER' ELSE 'CHECKED_OUT' END AS attendance_status
+        FROM attendances a
+        JOIN members m ON m.id = a.member_id
+        LEFT JOIN member_memberships mm ON mm.id = (
+            SELECT mm2.id FROM member_memberships mm2
+            WHERE mm2.member_id = m.id AND mm2.status = 'ACTIVE'
+              AND a.attendance_date BETWEEN mm2.start_date AND mm2.end_date
+            ORDER BY mm2.end_date, mm2.id DESC LIMIT 1
+        )
+        LEFT JOIN membership_products mp ON mp.id = mm.product_id
+    </sql>
+
+    <select id="findSummary" resultType="com.acorn.gymmanagement.attendance.dto.response.AttendanceSummaryResponse">
+        SELECT COUNT(*) AS checked_in_count,
+               COALESCE(SUM(CASE WHEN checked_out_at IS NULL THEN 1 ELSE 0 END), 0) AS current_count,
+               COALESCE(SUM(CASE WHEN checked_out_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS checked_out_count,
+               COALESCE(SUM(CASE WHEN checked_out_at IS NULL AND attendance_date &lt; CURRENT_DATE THEN 1 ELSE 0 END), 0) AS missing_checkout_count
+        FROM attendances WHERE attendance_date = #{date}
+    </select>
+
+    <select id="findCurrentAttendances" resultMap="AttendanceResult">
+        <include refid="attendanceColumns"/>
+        WHERE a.checked_out_at IS NULL
+        <if test="keyword != null and keyword != ''">
+            AND (m.name LIKE CONCAT('%', #{keyword}, '%') OR m.phone LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY a.checked_in_at DESC
+    </select>
+
+    <select id="findHistory" resultMap="AttendanceResult">
+        <include refid="attendanceColumns"/>
+        <where>
+            a.attendance_date = #{date}
+            <if test="keyword != null and keyword != ''">
+                AND (m.name LIKE CONCAT('%', #{keyword}, '%') OR m.phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status == 'IN_CENTER'">AND a.checked_out_at IS NULL</if>
+            <if test="status == 'CHECKED_OUT'">AND a.checked_out_at IS NOT NULL</if>
+        </where>
+        ORDER BY a.checked_in_at DESC
+    </select>
+
+    <select id="findOpenAttendanceForUpdate" resultMap="AttendanceResult">
+        <include refid="attendanceColumns"/>
+        WHERE a.id = #{attendanceId} AND a.checked_out_at IS NULL
+        FOR UPDATE
+    </select>
+
+    <update id="checkout">
+        UPDATE attendances
+        SET checked_out_at = #{checkedOutAt}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{attendanceId} AND checked_out_at IS NULL AND checked_in_at &lt;= #{checkedOutAt}
+    </update>
+</mapper>
