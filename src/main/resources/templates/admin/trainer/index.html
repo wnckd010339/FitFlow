@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"><head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>트레이너 관리 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/common/admin-layout.css}" href="/css/common/admin-layout.css">
+    <link rel="stylesheet" th:href="@{/css/screens/admin-trainer.css}" href="/css/screens/admin-trainer.css">
+</head><body><div class="admin-shell">
+<aside th:replace="~{fragments/layout :: adminSidebar('trainers')}"></aside>
+<main class="content"><header class="page-header"><div><h1>트레이너 관리</h1><p>트레이너 현황과 회원 배정 상태를 확인합니다.</p></div></header>
+<section class="summary-grid">
+    <article><span>전체 트레이너</span><strong th:text="${summary.totalCount}">0</strong></article>
+    <article><span>활동 중</span><strong th:text="${summary.activeCount}">0</strong></article>
+    <article><span>담당 회원</span><strong th:text="${summary.assignedMemberCount}">0</strong></article>
+    <article><span>배정 대기</span><strong class="warn" th:text="${summary.waitingMemberCount}">0</strong></article>
+</section>
+<form class="filter-panel" method="get" th:action="@{/admin/trainers}">
+    <label>트레이너 검색<input type="search" name="keyword" th:value="${condition.keyword}" placeholder="이름 또는 연락처"></label>
+    <label>상태<select name="status"><option value="">전체</option><option value="ACTIVE" th:selected="${condition.status == 'ACTIVE'}">활동 중</option><option value="INACTIVE" th:selected="${condition.status == 'INACTIVE'}">비활동</option></select></label>
+    <label>배정 가능<select name="available"><option value="">전체</option><option value="true" th:selected="${condition.available == true}">가능</option><option value="false" th:selected="${condition.available == false}">불가</option></select></label>
+    <div class="actions"><a th:href="@{/admin/trainers}">초기화</a><button>검색</button></div>
+</form>
+<section class="table-card"><div class="card-title"><h2>트레이너 목록</h2><span th:text="|${#lists.size(trainers)}명|">0명</span></div><div class="table-wrap"><table><thead><tr><th>트레이너</th><th>연락처</th><th>전문 분야</th><th>담당 회원</th><th>상태</th><th>최근 배정</th></tr></thead><tbody>
+<tr th:each="t : ${trainers}"><td><strong th:text="${t.name}"></strong></td><td th:text="${t.phone}"></td><td th:text="${t.specialty ?: '-'}"></td><td th:text="|${t.assignedMemberCount}명|"></td><td><span class="status" th:classappend="${t.status == 'ACTIVE'} ? ' active'" th:text="${t.status == 'ACTIVE' ? '활동 중' : '비활동'}"></span></td><td th:text="${t.latestAssignedAt ?: '-'}"></td></tr>
+<tr th:if="${#lists.isEmpty(trainers)}"><td colspan="6" class="empty">조회된 트레이너가 없습니다.</td></tr></tbody></table></div></section>
+<section class="waiting-card"><div><h2>트레이너 배정 대기 회원</h2><p>상담을 희망했지만 아직 담당 트레이너가 없는 회원입니다.</p></div><ul><li th:each="m : ${waitingMembers}"><strong th:text="${m.memberName}"></strong><span th:text="${m.phone}"></span><small th:text="|가입 ${m.joinedAt}|"></small></li><li class="empty" th:if="${#lists.isEmpty(waitingMembers)}">배정 대기 회원이 없습니다.</li></ul></section>
+</main></div></body></html>

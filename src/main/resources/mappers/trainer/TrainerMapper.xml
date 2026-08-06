@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acorn.gymmanagement.trainer.mapper.TrainerMapper">
+    <select id="findSummary" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerSummaryResponse">
+        SELECT (SELECT COUNT(*) FROM trainers) AS total_count,
+               (SELECT COUNT(*) FROM trainers WHERE status = 'ACTIVE') AS active_count,
+               (SELECT COUNT(*) FROM trainer_assignments WHERE status = 'ACTIVE') AS assigned_member_count,
+               (SELECT COUNT(*) FROM members m WHERE m.status = 'ACTIVE' AND m.trainer_requested = TRUE
+                  AND NOT EXISTS (SELECT 1 FROM trainer_assignments ta WHERE ta.member_id = m.id AND ta.status = 'ACTIVE')) AS waiting_member_count
+    </select>
+
+    <select id="findTrainers" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerListResponse">
+        SELECT t.id AS trainer_id, t.name, t.phone, t.specialty,
+               COUNT(ta.id) AS assigned_member_count, t.status,
+               MAX(ta.started_at) AS latest_assigned_at
+        FROM trainers t
+        LEFT JOIN trainer_assignments ta ON ta.trainer_id = t.id AND ta.status = 'ACTIVE'
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (t.name LIKE CONCAT('%', #{keyword}, '%') OR t.phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null and status != ''">AND t.status = #{status}</if>
+        </where>
+        GROUP BY t.id, t.name, t.phone, t.specialty, t.status
+        <if test="available != null">
+            HAVING <choose><when test="available">t.status = 'ACTIVE'</when><otherwise>t.status != 'ACTIVE'</otherwise></choose>
+        </if>
+        ORDER BY CASE WHEN t.status = 'ACTIVE' THEN 0 ELSE 1 END, t.name, t.id
+    </select>
+
+    <select id="findWaitingMembers" resultType="com.acorn.gymmanagement.trainer.dto.response.WaitingMemberResponse">
+        SELECT m.id AS member_id, m.name AS member_name, m.phone, m.joined_at
+        FROM members m
+        WHERE m.status = 'ACTIVE' AND m.trainer_requested = TRUE
+          AND NOT EXISTS (SELECT 1 FROM trainer_assignments ta WHERE ta.member_id = m.id AND ta.status = 'ACTIVE')
+        ORDER BY m.joined_at, m.id
+        LIMIT 5
+    </select>
+</mapper>
