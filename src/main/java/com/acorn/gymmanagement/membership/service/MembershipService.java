@@ -110,9 +110,7 @@ public class MembershipService {
     ) {
         MemberMembershipResponse membership = findMembership(memberId, membershipId);
 
-        if (membership.status() != MembershipStatus.PENDING_PAYMENT
-                && membership.status() != MembershipStatus.ACTIVE
-                && membership.status() != MembershipStatus.PAUSED) {
+        if (membership.status() != MembershipStatus.PENDING_PAYMENT) {
             throw invalidTransition(membership.status(), MembershipStatus.CANCELLED);
         }
 

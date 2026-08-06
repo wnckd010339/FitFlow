@@ -96,7 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const actions = element("div", "membership-history-actions");
         if (membership.status === "ACTIVE") actions.append(actionButton("일시정지", "pause", membership.membershipId));
         if (membership.status === "PAUSED") actions.append(actionButton("이용 재개", "resume", membership.membershipId));
-        if (["PENDING_PAYMENT", "ACTIVE", "PAUSED"].includes(membership.status)) {
+        const history = actionButton("결제 내역", "history", membership.membershipId);
+        actions.append(history);
+        if (membership.status === "PENDING_PAYMENT") {
             const cancel = actionButton("회원권 취소", "cancel", membership.membershipId);
             cancel.classList.add("danger-button");
             actions.append(cancel);
@@ -107,6 +109,14 @@ document.addEventListener("DOMContentLoaded", () => {
     async function handleStatusAction(event) {
         const button = event.target.closest("button[data-action]");
         if (!button || processing) return;
+        if (button.dataset.action === "history") {
+            const params = new URLSearchParams({
+                memberId,
+                view: "history"
+            });
+            window.location.href = `/admin/memberships?${params}`;
+            return;
+        }
         const labels = {pause: "일시정지", resume: "이용 재개", cancel: "취소"};
         if (!window.confirm(`이 회원권을 ${labels[button.dataset.action]} 처리하시겠습니까?`)) return;
         setProcessing(true, button);

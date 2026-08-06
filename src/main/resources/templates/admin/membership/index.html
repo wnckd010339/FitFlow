@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>회원권·결제 관리 | FitFlow</title>
-    <link rel="stylesheet" th:href="@{/css/common/admin-layout.css}"
-          href="/css/common/admin-layout.css">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>결제 관리 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/common/admin-layout.css}" href="/css/common/admin-layout.css">
     <link rel="stylesheet" th:href="@{/css/screens/admin-membership-payment.css}"
           href="/css/screens/admin-membership-payment.css">
 </head>
@@ -13,188 +14,149 @@
 <div class="admin-shell">
     <aside th:replace="~{fragments/layout :: adminSidebar('memberships')}"></aside>
 
-    <main class="content payment-content">
+    <main class="content payment-content"
+          th:attr="data-member-id=${selectedMember != null ? selectedMember.id : ''}">
         <header class="payment-page-header">
             <div>
-                <span class="page-kicker">관리자 현장 결제</span>
+                <span class="page-kicker">관리자 조회·환불 업무</span>
                 <h1>회원권·결제 관리</h1>
-                <p>회원의 회원권을 등록하고 현장에서 완료된 결제를 시스템에 기록합니다.</p>
+                <p>회원이 완료한 결제와 환불 이력을 조회하고 필요한 환불 업무를 처리합니다.</p>
             </div>
-            <span class="prototype-badge">화면 시안 · 기능 연결 예정</span>
+            <a class="member-filter-reset" th:if="${memberFiltered}"
+               th:href="@{/admin/memberships(view='history')}">회원 필터 해제</a>
         </header>
 
-        <div class="payment-workspace">
-            <section class="payment-card product-card" aria-labelledby="product-card-title">
-                <div class="section-heading">
-                    <div>
-                        <span class="step-number">1</span>
-                        <h2 id="product-card-title">회원권 상품 선택</h2>
-                    </div>
-                    <span class="section-caption">결제 대상</span>
-                </div>
+        <section class="selected-member-context" th:if="${selectedMember != null}">
+            <div class="selected-member-avatar"
+                 th:text="${#strings.substring(selectedMember.name, 0, 1)}">박</div>
+            <div>
+                <strong th:text="${selectedMember.name}">박민수</strong>
+                <span th:text="|${selectedMember.phone} · 회원 #${selectedMember.id}|">
+                    010-3000-3000 · 회원 #3
+                </span>
+            </div>
+            <span class="selected-member-label">회원 상세에서 조회 중</span>
+        </section>
 
+        <p class="payment-page-feedback" id="payment-page-feedback"
+           role="status" tabindex="-1" hidden></p>
+
+        <section class="payment-summary" aria-label="결제 현황 요약">
+            <article>
+                <span>조회 내역</span>
+                <strong id="summary-count">0건</strong>
+                <small>현재 필터 기준</small>
+            </article>
+            <article>
+                <span>결제 합계</span>
+                <strong id="summary-paid">0원</strong>
+                <small>완료된 결제 금액</small>
+            </article>
+            <article>
+                <span>환불 합계</span>
+                <strong id="summary-refunded">0원</strong>
+                <small>완료된 환불 금액</small>
+            </article>
+            <article>
+                <span>부분 환불</span>
+                <strong id="summary-partial">0건</strong>
+                <small>추가 환불 가능 결제</small>
+            </article>
+        </section>
+
+        <section class="payment-filter-card" aria-labelledby="payment-filter-title">
+            <div class="filter-heading">
+                <div>
+                    <h2 id="payment-filter-title">조회 조건</h2>
+                    <p>회원, 상품, 결제수단, 상태와 기간으로 내역을 검색합니다.</p>
+                </div>
+                <button id="reset-payment-filters" class="filter-reset" type="button">조건 초기화</button>
+            </div>
+
+            <div class="payment-filter-grid">
                 <label class="payment-field">
                     <span>회원</span>
-                    <select name="memberId">
-                        <option>박민수 · 010-3000-3000</option>
-                        <option>김지훈 · 010-3000-1000</option>
-                        <option>이서연 · 010-3000-2000</option>
+                    <select id="payment-member-filter">
+                        <option value="">전체 회원</option>
+                        <option th:each="member : ${members}"
+                                th:value="${member.memberId}"
+                                th:selected="${selectedMember != null && selectedMember.id == member.memberId}"
+                                th:text="|${member.name} · ${member.phone}|">
+                            박민수 · 010-3000-3000
+                        </option>
                     </select>
                 </label>
-
-                <fieldset class="product-options">
-                    <legend>회원권 상품</legend>
-                    <label class="product-option">
-                        <input type="radio" name="product" value="monthly">
-                        <span class="radio-mark"></span>
-                        <span class="product-copy">
-                            <strong>1개월 자유 이용권</strong>
-                            <small>80,000원 · 30일</small>
-                        </span>
-                    </label>
-                    <label class="product-option">
-                        <input type="radio" name="product" value="quarterly" checked>
-                        <span class="radio-mark"></span>
-                        <span class="product-copy">
-                            <strong>3개월 자유 이용권</strong>
-                            <small>180,000원 · 90일</small>
-                        </span>
-                    </label>
-                    <label class="product-option">
-                        <input type="radio" name="product" value="pt">
-                        <span class="radio-mark"></span>
-                        <span class="product-copy">
-                            <strong>PT 10회 패키지</strong>
-                            <small>500,000원 · 120일</small>
-                        </span>
-                    </label>
-                </fieldset>
-
-                <div class="date-grid">
-                    <label class="payment-field">
-                        <span>시작일</span>
-                        <input type="date" value="2026-08-12">
-                    </label>
-                    <label class="payment-field">
-                        <span>종료일</span>
-                        <input type="date" value="2026-11-09" readonly>
-                    </label>
-                </div>
-
-                <div class="amount-summary">
-                    <div>
-                        <span>결제 예정 금액</span>
-                        <small>결제 완료 후 회원권이 활성화됩니다.</small>
-                    </div>
-                    <strong>180,000원</strong>
-                </div>
-            </section>
-
-            <div class="payment-side-column">
-                <section class="payment-card checkout-card" aria-labelledby="checkout-title">
-                    <div class="section-heading">
-                        <div>
-                            <span class="step-number">2</span>
-                            <h2 id="checkout-title">결제 정보</h2>
-                        </div>
-                        <span class="status-pill">신규 결제</span>
-                    </div>
-
-                    <p class="checkout-notice">현장에서 완료된 결제를 시스템에 등록합니다.</p>
-
-                    <div class="checkout-grid">
-                        <label class="payment-field">
-                            <span>결제수단</span>
-                            <select>
-                                <option>신용카드</option>
-                                <option>현금</option>
-                                <option>계좌이체</option>
-                            </select>
-                        </label>
-                        <label class="payment-field">
-                            <span>승인번호</span>
-                            <input type="text" value="4972-8831">
-                        </label>
-                        <label class="payment-field">
-                            <span>결제 금액</span>
-                            <input type="text" value="180,000원" readonly>
-                        </label>
-                        <label class="payment-field">
-                            <span>결제 일시</span>
-                            <input type="text" value="2026.08.05 14:30" readonly>
-                        </label>
-                    </div>
-
-                    <div class="payment-ready">
-                        <div>
-                            <strong>결제 정보 확인 완료</strong>
-                            <span>환불 가능 예정 금액 180,000원</span>
-                        </div>
-                        <button type="button" disabled>결제 완료 처리</button>
-                    </div>
-                </section>
-
-                <section class="payment-card history-card" aria-labelledby="history-title">
-                    <div class="section-heading history-heading">
-                        <div>
-                            <h2 id="history-title">결제·환불 내역</h2>
-                            <span class="history-member">박민수 회원</span>
-                        </div>
-                        <button class="filter-reset" type="button" disabled>회원 필터 해제</button>
-                    </div>
-
-                    <div class="payment-table-scroll">
-                        <table>
-                            <thead>
-                            <tr>
-                                <th>일시</th>
-                                <th>구분</th>
-                                <th>수단</th>
-                                <th>금액</th>
-                                <th>상태</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>08.05 14:30</td>
-                                <td>결제</td>
-                                <td>카드</td>
-                                <td class="amount-positive">180,000원</td>
-                                <td><span class="table-status completed">완료</span></td>
-                            </tr>
-                            <tr>
-                                <td>06.12 14:11</td>
-                                <td>환불</td>
-                                <td>카드</td>
-                                <td class="amount-refund">-30,000원</td>
-                                <td><span class="table-status completed">완료</span></td>
-                            </tr>
-                            <tr>
-                                <td>06.11 09:50</td>
-                                <td>결제</td>
-                                <td>카드</td>
-                                <td class="amount-positive">80,000원</td>
-                                <td><span class="table-status completed">완료</span></td>
-                            </tr>
-                            <tr>
-                                <td>05.02 17:32</td>
-                                <td>결제</td>
-                                <td>현금</td>
-                                <td class="amount-positive">500,000원</td>
-                                <td><span class="table-status completed">완료</span></td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="history-footer">
-                        <span>최근 결제·환불 4건</span>
-                        <button type="button" disabled>선택 결제 환불</button>
-                    </div>
-                </section>
+                <label class="payment-field filter-keyword">
+                    <span>회원·상품 검색</span>
+                    <input id="payment-keyword" type="search" placeholder="회원명 또는 상품명">
+                </label>
+                <label class="payment-field">
+                    <span>결제수단</span>
+                    <select id="payment-method-filter">
+                        <option value="">전체</option>
+                        <option value="CARD">카드</option>
+                        <option value="CASH">현금</option>
+                        <option value="TRANSFER">계좌이체</option>
+                    </select>
+                </label>
+                <label class="payment-field">
+                    <span>상태</span>
+                    <select id="payment-status-filter">
+                        <option value="">전체</option>
+                        <option value="COMPLETED">결제 완료</option>
+                        <option value="PARTIALLY_REFUNDED">부분 환불</option>
+                        <option value="REFUNDED">전액 환불</option>
+                    </select>
+                </label>
+                <label class="payment-field">
+                    <span>시작일</span>
+                    <input id="payment-date-from" type="date">
+                </label>
+                <label class="payment-field">
+                    <span>종료일</span>
+                    <input id="payment-date-to" type="date">
+                </label>
             </div>
-        </div>
+        </section>
+
+        <section class="payment-history-card" aria-labelledby="history-title">
+            <div class="history-heading">
+                <div>
+                    <h2 id="history-title">결제·환불 내역</h2>
+                    <p>관리자는 결제 결과를 조회하고 완료된 결제에 대해 환불을 처리할 수 있습니다.</p>
+                </div>
+                <span class="history-member"
+                      th:text="${selectedMember != null ? selectedMember.name + ' 회원' : '전체 회원'}">
+                    전체 회원
+                </span>
+            </div>
+
+            <div class="payment-table-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>일시</th>
+                        <th>회원</th>
+                        <th>구분</th>
+                        <th>상품</th>
+                        <th>수단</th>
+                        <th>금액</th>
+                        <th>상태</th>
+                        <th>관리</th>
+                    </tr>
+                    </thead>
+                    <tbody id="payment-history-body">
+                    <tr><td class="history-loading" colspan="8">결제 내역을 불러오는 중입니다.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="history-footer">
+                <span id="payment-history-count">결제·환불 0건</span>
+            </div>
+        </section>
     </main>
 </div>
+<script th:src="@{/js/screens/admin-membership-payment.js}"
+        src="/js/screens/admin-membership-payment.js" defer></script>
 </body>
 </html>

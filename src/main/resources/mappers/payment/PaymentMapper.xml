@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.acorn.gymmanagement.payment.mapper.PaymentMapper">
+
+    <resultMap id="PaymentTargetResultMap"
+               type="com.acorn.gymmanagement.payment.dto.response.PaymentTargetResponse">
+        <constructor>
+            <idArg name="membershipId" column="membership_id" javaType="java.lang.Long"/>
+            <arg name="memberId" column="member_id" javaType="java.lang.Long"/>
+            <arg name="memberName" column="member_name" javaType="java.lang.String"/>
+            <arg name="memberPhone" column="member_phone" javaType="java.lang.String"/>
+            <arg name="productId" column="product_id" javaType="java.lang.Long"/>
+            <arg name="productName" column="product_name" javaType="java.lang.String"/>
+            <arg name="price" column="price" javaType="java.math.BigDecimal"/>
+            <arg name="startDate" column="start_date" javaType="java.time.LocalDate"/>
+            <arg name="endDate" column="end_date" javaType="java.time.LocalDate"/>
+            <arg name="membershipStatus" column="membership_status"
+                 javaType="com.acorn.gymmanagement.membership.model.MembershipStatus"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="PaymentResponseResultMap"
+               type="com.acorn.gymmanagement.payment.dto.response.PaymentResponse">
+        <constructor>
+            <idArg name="paymentId" column="payment_id" javaType="java.lang.Long"/>
+            <arg name="memberId" column="member_id" javaType="java.lang.Long"/>
+            <arg name="membershipId" column="membership_id" javaType="java.lang.Long"/>
+            <arg name="memberName" column="member_name" javaType="java.lang.String"/>
+            <arg name="productName" column="product_name" javaType="java.lang.String"/>
+            <arg name="amount" column="amount" javaType="java.math.BigDecimal"/>
+            <arg name="paymentMethod" column="payment_method"
+                 javaType="com.acorn.gymmanagement.payment.model.PaymentMethod"/>
+            <arg name="status" column="payment_status"
+                 javaType="com.acorn.gymmanagement.payment.model.PaymentStatus"/>
+            <arg name="paidAt" column="paid_at" javaType="java.time.LocalDateTime"/>
+            <arg name="refundedAmount" column="refunded_amount" javaType="java.math.BigDecimal"/>
+            <arg name="refundableAmount" column="refundable_amount" javaType="java.math.BigDecimal"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="PaymentResultMap"
+               type="com.acorn.gymmanagement.payment.model.Payment">
+        <constructor>
+            <idArg name="paymentId" column="payment_id" javaType="java.lang.Long"/>
+            <arg name="memberId" column="member_id" javaType="java.lang.Long"/>
+            <arg name="membershipId" column="membership_id" javaType="java.lang.Long"/>
+            <arg name="amount" column="amount" javaType="java.math.BigDecimal"/>
+            <arg name="paymentMethod" column="payment_method"
+                 javaType="com.acorn.gymmanagement.payment.model.PaymentMethod"/>
+            <arg name="status" column="payment_status"
+                 javaType="com.acorn.gymmanagement.payment.model.PaymentStatus"/>
+            <arg name="paidAt" column="paid_at" javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="PaymentHistoryResultMap"
+               type="com.acorn.gymmanagement.payment.dto.response.PaymentHistoryResponse">
+        <constructor>
+            <idArg name="transactionId" column="transaction_id" javaType="java.lang.Long"/>
+            <arg name="paymentId" column="payment_id" javaType="java.lang.Long"/>
+            <arg name="memberId" column="member_id" javaType="java.lang.Long"/>
+            <arg name="memberName" column="member_name" javaType="java.lang.String"/>
+            <arg name="transactionType" column="transaction_type" javaType="java.lang.String"/>
+            <arg name="occurredAt" column="occurred_at" javaType="java.time.LocalDateTime"/>
+            <arg name="productName" column="product_name" javaType="java.lang.String"/>
+            <arg name="paymentMethod" column="payment_method"
+                 javaType="com.acorn.gymmanagement.payment.model.PaymentMethod"/>
+            <arg name="amount" column="amount" javaType="java.math.BigDecimal"/>
+            <arg name="status" column="status" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="PaymentMemberOptionResultMap"
+               type="com.acorn.gymmanagement.payment.dto.response.PaymentMemberOptionResponse">
+        <constructor>
+            <idArg name="memberId" column="member_id" javaType="java.lang.Long"/>
+            <arg name="name" column="name" javaType="java.lang.String"/>
+            <arg name="phone" column="phone" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="RefundResponseResultMap"
+               type="com.acorn.gymmanagement.payment.dto.response.RefundResponse">
+        <constructor>
+            <idArg name="refundId" column="refund_id" javaType="java.lang.Long"/>
+            <arg name="paymentId" column="payment_id" javaType="java.lang.Long"/>
+            <arg name="amount" column="amount" javaType="java.math.BigDecimal"/>
+            <arg name="reason" column="reason" javaType="java.lang.String"/>
+            <arg name="status" column="refund_status"
+                 javaType="com.acorn.gymmanagement.payment.model.RefundStatus"/>
+            <arg name="refundedAt" column="refunded_at" javaType="java.time.LocalDateTime"/>
+            <arg name="processedBy" column="processed_by" javaType="java.lang.Long"/>
+        </constructor>
+    </resultMap>
+
+    <sql id="paymentResponseColumns">
+        SELECT
+            p.id AS payment_id,
+            p.member_id,
+            p.member_membership_id AS membership_id,
+            m.name AS member_name,
+            mp.name AS product_name,
+            p.amount,
+            p.payment_method,
+            p.status AS payment_status,
+            p.paid_at,
+            COALESCE(SUM(CASE WHEN r.status = 'COMPLETED' THEN r.amount ELSE 0 END), 0) AS refunded_amount,
+            GREATEST(
+                p.amount - COALESCE(SUM(CASE WHEN r.status = 'COMPLETED' THEN r.amount ELSE 0 END), 0),
+                0
+            ) AS refundable_amount
+        FROM payments p
+        JOIN members m ON m.id = p.member_id
+        LEFT JOIN member_memberships mm ON mm.id = p.member_membership_id
+        LEFT JOIN membership_products mp ON mp.id = mm.product_id
+        LEFT JOIN refunds r ON r.payment_id = p.id
+    </sql>
+
+    <select id="findPaymentTargetForUpdate" resultMap="PaymentTargetResultMap">
+        SELECT
+            mm.id AS membership_id,
+            mm.member_id,
+            m.name AS member_name,
+            m.phone AS member_phone,
+            mm.product_id,
+            mp.name AS product_name,
+            mp.price,
+            mm.start_date,
+            mm.end_date,
+            mm.status AS membership_status
+        FROM member_memberships mm
+        JOIN members m ON m.id = mm.member_id
+        JOIN membership_products mp ON mp.id = mm.product_id
+        WHERE mm.id = #{membershipId}
+          AND mm.member_id = #{memberId}
+        FOR UPDATE
+    </select>
+
+    <select id="existsCompletedPaymentByMembershipId" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM payments
+            WHERE member_membership_id = #{membershipId}
+              AND status IN ('COMPLETED', 'PARTIALLY_REFUNDED', 'REFUNDED')
+        )
+    </select>
+
+    <insert id="insertPayment"
+            parameterType="com.acorn.gymmanagement.payment.model.PaymentRegistration"
+            useGeneratedKeys="true" keyProperty="paymentId" keyColumn="id">
+        INSERT INTO payments (
+            member_id, member_membership_id, amount, payment_method, status, paid_at
+        ) VALUES (
+            #{memberId}, #{membershipId}, #{amount}, #{paymentMethod}, #{status}, #{paidAt}
+        )
+    </insert>
+
+    <select id="findById" resultMap="PaymentResponseResultMap">
+        <include refid="paymentResponseColumns"/>
+        WHERE p.id = #{paymentId}
+        GROUP BY p.id, p.member_id, p.member_membership_id, m.name, mp.name,
+                 p.amount, p.payment_method, p.status, p.paid_at
+    </select>
+
+    <select id="findPaymentForUpdate" resultMap="PaymentResultMap">
+        SELECT
+            id AS payment_id,
+            member_id,
+            member_membership_id AS membership_id,
+            amount,
+            payment_method,
+            status AS payment_status,
+            paid_at
+        FROM payments
+        WHERE id = #{paymentId}
+        FOR UPDATE
+    </select>
+
+    <select id="findHistory" resultMap="PaymentHistoryResultMap">
+        SELECT *
+        FROM (
+            SELECT
+                p.id AS transaction_id,
+                p.id AS payment_id,
+                p.member_id,
+                m.name AS member_name,
+                'PAYMENT' AS transaction_type,
+                p.paid_at AS occurred_at,
+                mp.name AS product_name,
+                p.payment_method,
+                p.amount,
+                p.status
+            FROM payments p
+            JOIN members m ON m.id = p.member_id
+            LEFT JOIN member_memberships mm ON mm.id = p.member_membership_id
+            LEFT JOIN membership_products mp ON mp.id = mm.product_id
+            <if test="memberId != null">WHERE p.member_id = #{memberId}</if>
+
+            UNION ALL
+
+            SELECT
+                r.id AS transaction_id,
+                p.id AS payment_id,
+                p.member_id,
+                m.name AS member_name,
+                'REFUND' AS transaction_type,
+                r.refunded_at AS occurred_at,
+                mp.name AS product_name,
+                p.payment_method,
+                r.amount,
+                r.status
+            FROM refunds r
+            JOIN payments p ON p.id = r.payment_id
+            JOIN members m ON m.id = p.member_id
+            LEFT JOIN member_memberships mm ON mm.id = p.member_membership_id
+            LEFT JOIN membership_products mp ON mp.id = mm.product_id
+            <if test="memberId != null">WHERE p.member_id = #{memberId}</if>
+        ) history
+        ORDER BY occurred_at DESC, transaction_id DESC
+    </select>
+
+    <select id="findActiveMembers" resultMap="PaymentMemberOptionResultMap">
+        SELECT id AS member_id, name, phone
+        FROM members
+        WHERE status = 'ACTIVE'
+        ORDER BY name, id
+    </select>
+
+    <insert id="insertRefund"
+            parameterType="com.acorn.gymmanagement.payment.model.RefundRegistration"
+            useGeneratedKeys="true" keyProperty="refundId" keyColumn="id">
+        INSERT INTO refunds (
+            payment_id, amount, reason, status, refunded_at, processed_by
+        ) VALUES (
+            #{paymentId}, #{amount}, #{reason}, #{status}, #{refundedAt}, #{processedBy}
+        )
+    </insert>
+
+    <select id="findRefundById" resultMap="RefundResponseResultMap">
+        SELECT
+            id AS refund_id,
+            payment_id,
+            amount,
+            reason,
+            status AS refund_status,
+            refunded_at,
+            processed_by
+        FROM refunds
+        WHERE id = #{refundId}
+    </select>
+
+    <update id="updatePaymentStatus">
+        UPDATE payments
+        SET status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{paymentId}
+    </update>
+</mapper>

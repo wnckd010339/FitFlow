@@ -46,7 +46,17 @@ public interface MembershipMapper {
             @Param("memberId") Long memberId,
             @Param("membershipId") Long membershipId,
             @Param("status") MembershipStatus status
-            );
+    );
+
+    int activateAfterPayment(
+            @Param("memberId") Long memberId,
+            @Param("membershipId") Long membershipId
+    );
+
+    int cancelAfterFullRefund(
+            @Param("memberId") Long memberId,
+            @Param("membershipId") Long membershipId
+    );
 
 
 }
