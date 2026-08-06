@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acorn.gymmanagement.dashboard.mapper.DashboardMapper">
+    <select id="findSummary" resultType="com.acorn.gymmanagement.dashboard.dto.response.DashboardSummaryResponse">
+        SELECT
+          (SELECT COUNT(*) FROM attendances WHERE attendance_date = CURRENT_DATE) AS today_check_in_count,
+          (SELECT COUNT(*) FROM attendances WHERE attendance_date = CURRENT_DATE - INTERVAL 1 DAY) AS yesterday_check_in_count,
+          (SELECT COUNT(*) FROM member_memberships WHERE status = 'ACTIVE' AND CURRENT_DATE BETWEEN start_date AND end_date) AS active_membership_count,
+          (SELECT COUNT(*) FROM members WHERE joined_at &gt;= DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')) AS new_member_count,
+          (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.status IN ('COMPLETED','PARTIALLY_REFUNDED','REFUNDED') AND p.paid_at &gt;= DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'))
+          - (SELECT COALESCE(SUM(r.amount), 0) FROM refunds r WHERE r.status = 'COMPLETED' AND r.refunded_at &gt;= DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')) AS monthly_sales,
+          (SELECT COUNT(*) FROM member_memberships WHERE status = 'ACTIVE' AND end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL 7 DAY) AS expiring_membership_count,
+          (SELECT COUNT(*) FROM attendances WHERE attendance_date = CURRENT_DATE AND checked_out_at IS NULL) AS current_count,
+          (SELECT COUNT(*) FROM attendances WHERE attendance_date = CURRENT_DATE AND checked_out_at IS NOT NULL) AS checked_out_count,
+          ((SELECT COUNT(*) FROM member_memberships WHERE status = 'ACTIVE' AND end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL 7 DAY)
+           + (SELECT COUNT(*) FROM equipment WHERE status IN ('INSPECTION','REPAIR','UNAVAILABLE'))
+           + (SELECT COUNT(*) FROM members m WHERE m.status = 'ACTIVE' AND m.trainer_requested = TRUE AND NOT EXISTS (SELECT 1 FROM trainer_assignments ta WHERE ta.member_id = m.id AND ta.status = 'ACTIVE'))) AS alert_count
+    </select>
+
+    <select id="findHourlyAttendance" resultType="com.acorn.gymmanagement.dashboard.dto.response.HourlyAttendanceCount">
+        SELECT (FLOOR((HOUR(checked_in_at) - 6) / 3) * 3 + 6) AS hour, COUNT(*) AS count
+        FROM attendances
+        WHERE attendance_date = CURRENT_DATE AND HOUR(checked_in_at) BETWEEN 6 AND 23
+        GROUP BY (FLOOR((HOUR(checked_in_at) - 6) / 3) * 3 + 6)
+        ORDER BY hour
+    </select>
+
+    <select id="findRecentActivities" resultType="com.acorn.gymmanagement.dashboard.dto.response.DashboardActivityResponse">
+        SELECT type, title, description, occurred_at
+        FROM (
+          SELECT 'ATTENDANCE' AS type, CONCAT(m.name, ' 회원 체크인') AS title,
+                 'QR 출석' AS description, a.checked_in_at AS occurred_at
+          FROM attendances a JOIN members m ON m.id = a.member_id
+          UNION ALL
+          SELECT 'PAYMENT', CONCAT(m.name, ' 회원 결제 완료'),
+                 COALESCE(mp.name, '회원권 결제'), p.paid_at
+          FROM payments p JOIN members m ON m.id = p.member_id
+          LEFT JOIN member_memberships mm ON mm.id = p.member_membership_id
+          LEFT JOIN membership_products mp ON mp.id = mm.product_id
+          WHERE p.status IN ('COMPLETED','PARTIALLY_REFUNDED')
+          UNION ALL
+          SELECT 'MEMBER', CONCAT(m.name, ' 신규 회원 가입'),
+                 CASE WHEN m.trainer_requested THEN '트레이너 상담 희망' ELSE '트레이너 희망 안 함' END,
+                 m.created_at
+          FROM members m
+          UNION ALL
+          SELECT 'FACILITY', CONCAT(e.name, ' 점검 기록'), ml.description, ml.performed_at
+          FROM equipment_maintenance_logs ml JOIN equipment e ON e.id = ml.equipment_id
+        ) activity
+        ORDER BY occurred_at DESC
+        LIMIT 4
+    </select>
+
+    <select id="findExpiringMemberships" resultType="com.acorn.gymmanagement.dashboard.dto.response.ExpiringMembershipResponse">
+        SELECT mm.id AS membership_id, mm.member_id, m.name AS member_name, mp.name AS product_name,
+               mm.end_date, DATEDIFF(mm.end_date, CURRENT_DATE) AS remaining_days
+        FROM member_memberships mm
+        JOIN members m ON m.id = mm.member_id
+        JOIN membership_products mp ON mp.id = mm.product_id
+        WHERE mm.status = 'ACTIVE' AND mm.end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL 7 DAY
+        ORDER BY mm.end_date, mm.id
+        LIMIT 5
+    </select>
+</mapper>

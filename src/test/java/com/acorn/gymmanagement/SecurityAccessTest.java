@@ -1,14 +1,23 @@
 package com.acorn.gymmanagement;
 
+import com.acorn.gymmanagement.dashboard.dto.response.DashboardResponse;
+import com.acorn.gymmanagement.dashboard.dto.response.DashboardSummaryResponse;
+import com.acorn.gymmanagement.dashboard.service.DashboardService;
 import com.acorn.gymmanagement.security.SessionUser;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -23,6 +32,19 @@ class SecurityAccessTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private DashboardService dashboardService;
+
+    @BeforeEach
+    void setUpDashboard() {
+        DashboardSummaryResponse summary = new DashboardSummaryResponse(
+                0, 0, 0, 0, BigDecimal.ZERO, 0, 0, 0, 0
+        );
+        when(dashboardService.getDashboard()).thenReturn(new DashboardResponse(
+                "테스트 날짜", summary, 0, List.of(), List.of(), List.of()
+        ));
+    }
 
     @Test
     void loginPageIsPublic() throws Exception {

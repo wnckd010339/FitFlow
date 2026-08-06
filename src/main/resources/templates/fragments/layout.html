@@ -1,13 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<body>
-<header th:fragment="header">
-    <a th:href="@{/admin/dashboard}">Gym Management</a>
-</header>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"><body>
+<header th:fragment="header"><a th:href="@{/admin/dashboard}">FitFlow</a></header>
 <aside class="sidebar" th:fragment="adminSidebar(activeMenu)">
-    <a class="brand" th:href="@{/admin/dashboard}" href="/admin/dashboard">
-        <span>F</span> FitFlow
-    </a>
+    <a class="brand" th:href="@{/admin/dashboard}" href="/admin/dashboard"><span>F</span> FitFlow</a>
     <p class="workspace-label">관리자</p>
     <nav aria-label="관리자 메뉴">
         <a th:href="@{/admin/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active'"><i></i>대시보드</a>
@@ -20,21 +15,12 @@
     <div class="sidebar-profile">
         <div class="avatar">관</div>
         <div class="sidebar-profile-copy">
-            <strong>FitFlow 관리자</strong>
-            <span>슈퍼 관리자</span>
+            <strong th:text="${session.LOGIN_USER?.loginId ?: session.LOGIN_USER?.email ?: '관리자'}">관리자</strong>
+            <span>관리자 계정</span>
         </div>
-
-        <form class="sidebar-logout-form"
-              th:action="@{/logout}"
-              action="/logout"
-              method="post">
-            <button class="sidebar-logout-button"
-                    type="submit"
-                    aria-label="관리자 계정 로그아웃">
-                로그아웃
-            </button>
+        <form class="sidebar-logout-form" th:action="@{/logout}" action="/logout" method="post">
+            <button class="sidebar-logout-button" type="submit" aria-label="관리자 계정 로그아웃">로그아웃</button>
         </form>
     </div>
 </aside>
-</body>
-</html>
+</body></html>

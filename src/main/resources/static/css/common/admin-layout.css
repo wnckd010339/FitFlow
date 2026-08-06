@@ -1,7 +1,27 @@
+.admin-shell,
+.admin-shell * {
+    box-sizing: border-box;
+}
+
+:root {
+    --deep: #153a34;
+    --lime: #d9f36a;
+}
+
+body {
+    margin: 0;
+    background: #f4f7f5;
+    font-family: "Noto Sans KR", Arial, sans-serif;
+}
+
 .admin-shell {
     display: grid;
     grid-template-columns: 240px minmax(0, 1fr);
     min-height: 100vh;
+}
+
+.admin-shell > main {
+    min-width: 0;
 }
 
 .sidebar {

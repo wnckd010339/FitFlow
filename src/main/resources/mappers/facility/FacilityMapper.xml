@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acorn.gymmanagement.facility.mapper.FacilityMapper">
+    <sql id="categoryPrefix">
+        CASE
+            WHEN e.category = 'CHEST' OR e.name REGEXP '체스트|벤치 프레스|펙 덱' THEN 'CH'
+            WHEN e.category = 'BACK' OR e.name REGEXP '랫 풀|로우|등 운동' THEN 'BA'
+            WHEN e.category = 'SHOULDER' OR e.name REGEXP '숄더|레터럴' THEN 'SH'
+            WHEN e.category = 'LEG' OR e.name REGEXP '레그|스쿼트|핵 스쿼트' THEN 'LG'
+            WHEN e.category = 'ARM' OR e.name REGEXP '컬|트라이셉스|암 머신' THEN 'AR'
+            WHEN e.category = 'CARDIO' OR e.category = '유산소' OR e.name REGEXP '트레드밀|사이클|스텝밀' THEN 'CA'
+            WHEN e.category = 'MULTI' OR e.name REGEXP '스미스|케이블|펑셔널' THEN 'MU'
+            WHEN e.category = 'FREE_WEIGHT' OR e.name REGEXP '파워 랙|덤벨|바벨' THEN 'FW'
+            ELSE 'EQ'
+        END
+    </sql>
+
+    <select id="findSummary" resultType="com.acorn.gymmanagement.facility.dto.response.FacilitySummaryResponse">
+        SELECT COUNT(*) AS total_count,
+               COALESCE(SUM(status = 'AVAILABLE'), 0) AS available_count,
+               COALESCE(SUM(status = 'INSPECTION'), 0) AS inspection_count,
+               COALESCE(SUM(status IN ('REPAIR', 'UNAVAILABLE')), 0) AS repair_count
+        FROM equipment
+    </select>
+
+    <select id="findEquipment" resultType="com.acorn.gymmanagement.facility.dto.response.EquipmentListResponse">
+        SELECT e.id AS equipment_id,
+               CONCAT(<include refid="categoryPrefix"/>, '-', LPAD(e.id, 3, '0')) AS management_code,
+               e.name, e.category, e.location, e.status,
+               DATE(MAX(ml.performed_at)) AS last_maintenance_date,
+               MIN(CASE WHEN ml.next_due_date &gt;= CURRENT_DATE THEN ml.next_due_date END) AS next_due_date
+        FROM equipment e
+        LEFT JOIN equipment_maintenance_logs ml ON ml.equipment_id = e.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (e.name LIKE CONCAT('%', #{keyword}, '%')
+                     OR CONCAT(<include refid="categoryPrefix"/>, '-', LPAD(e.id, 3, '0')) LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="category != null and category != ''">AND e.category = #{category}</if>
+            <if test="status != null and status != ''">AND e.status = #{status}</if>
+        </where>
+        GROUP BY e.id, e.name, e.category, e.location, e.status
+        ORDER BY CASE e.status WHEN 'REPAIR' THEN 0 WHEN 'INSPECTION' THEN 1 WHEN 'UNAVAILABLE' THEN 2 ELSE 3 END, e.id
+    </select>
+
+    <insert id="insertEquipment">
+        INSERT INTO equipment (name, category, location, status, purchased_at)
+        VALUES (#{name}, #{category}, #{location}, 'AVAILABLE', #{purchasedAt})
+    </insert>
+</mapper>
