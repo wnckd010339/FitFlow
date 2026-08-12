@@ -3,6 +3,9 @@ package com.acorn.gymmanagement;
 import com.acorn.gymmanagement.dashboard.dto.response.DashboardResponse;
 import com.acorn.gymmanagement.dashboard.dto.response.DashboardSummaryResponse;
 import com.acorn.gymmanagement.dashboard.service.DashboardService;
+import com.acorn.gymmanagement.member.dto.response.MemberHomeSummaryResponse;
+import com.acorn.gymmanagement.member.service.MemberService;
+import com.acorn.gymmanagement.member.view.MemberHomeView;
 import com.acorn.gymmanagement.security.SessionUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -36,6 +40,9 @@ class SecurityAccessTest {
     @MockitoBean
     private DashboardService dashboardService;
 
+    @MockitoBean
+    private MemberService memberService;
+
     @BeforeEach
     void setUpDashboard() {
         DashboardSummaryResponse summary = new DashboardSummaryResponse(
@@ -43,6 +50,15 @@ class SecurityAccessTest {
         );
         when(dashboardService.getDashboard()).thenReturn(new DashboardResponse(
                 "테스트 날짜", summary, 0, List.of(), List.of(), List.of()
+        ));
+
+        MemberHomeSummaryResponse memberSummary = new MemberHomeSummaryResponse(
+                1L, "테스트 회원", 0, 0, 0,
+                null, null, null, 0
+        );
+        when(memberService.findHomeView(1L)).thenReturn(new MemberHomeView(
+                LocalDate.of(2026, 8, 12), 4, memberSummary,
+                null, null, null, List.of(), List.of()
         ));
     }
 

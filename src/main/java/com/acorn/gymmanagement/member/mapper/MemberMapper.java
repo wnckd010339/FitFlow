@@ -55,4 +55,28 @@ public interface MemberMapper {
             @Param("memberId") Long memberId,
             @Param("status") MemberStatus status
     );
+
+    Optional<MemberHomeSummaryResponse> findHomeSummaryByUserId(
+            @Param("userId") Long userId
+    );
+
+    Optional<MemberHomeAttendanceResponse> findOpenAttendanceByUserId(
+            @Param("userId") Long userId
+    );
+
+    Optional<MemberHomeTrainerResponse> findHomeTrainerByUserId(
+            @Param("userId") Long userId
+    );
+
+    Optional<MemberHomeRoutineResponse> findHomeRoutineByUserId(
+            @Param("userId") Long userId
+    );
+
+    List<MemberHomeExerciseResponse> findTodayRoutineExercises(
+            @Param("routineId") Long routineId
+    );
+
+    List<MemberHomeWorkoutResponse> findRecentHomeWorkoutsByUserId(
+            @Param("userId") Long userId
+    );
 }

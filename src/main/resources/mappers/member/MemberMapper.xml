@@ -436,4 +436,167 @@
         )
     </insert>
 
+    <select id="findHomeSummaryByUserId"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberHomeSummaryResponse">
+        SELECT
+            m.id AS member_id,
+            m.name AS member_name,
+            (
+                SELECT COUNT(*)
+                FROM workout_sessions ws
+                WHERE ws.member_id = m.id
+                  AND YEARWEEK(ws.started_at, 1) = YEARWEEK(CURRENT_DATE, 1)
+            ) AS weekly_workout_count,
+            (
+                SELECT COUNT(DISTINCT a.attendance_date)
+                FROM attendances a
+                WHERE a.member_id = m.id
+                  AND a.attendance_date &gt;= DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')
+                  AND a.attendance_date &lt; DATE_ADD(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 1 MONTH)
+            ) AS monthly_attendance_count,
+            (
+                SELECT COUNT(DISTINCT a.attendance_date)
+                FROM attendances a
+                WHERE a.member_id = m.id
+                  AND a.attendance_date &gt;= DATE_SUB(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 1 MONTH)
+                  AND a.attendance_date &lt; DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')
+            ) AS previous_month_attendance_count,
+            (
+                SELECT mp.name
+                FROM member_memberships mm
+                JOIN membership_products mp ON mp.id = mm.product_id
+                WHERE mm.member_id = m.id
+                  AND mm.status = 'ACTIVE'
+                  AND mm.start_date &lt;= CURRENT_DATE
+                  AND mm.end_date &gt;= CURRENT_DATE
+                ORDER BY
+                    CASE mp.product_type WHEN 'GYM' THEN 0 WHEN 'COMBINED' THEN 1 ELSE 2 END,
+                    mm.end_date ASC,
+                    mm.id DESC
+                LIMIT 1
+            ) AS membership_name,
+            (
+                SELECT mm.end_date
+                FROM member_memberships mm
+                JOIN membership_products mp ON mp.id = mm.product_id
+                WHERE mm.member_id = m.id
+                  AND mm.status = 'ACTIVE'
+                  AND mm.start_date &lt;= CURRENT_DATE
+                  AND mm.end_date &gt;= CURRENT_DATE
+                ORDER BY
+                    CASE mp.product_type WHEN 'GYM' THEN 0 WHEN 'COMBINED' THEN 1 ELSE 2 END,
+                    mm.end_date ASC,
+                    mm.id DESC
+                LIMIT 1
+            ) AS membership_end_date,
+            (
+                SELECT DATEDIFF(mm.end_date, CURRENT_DATE)
+                FROM member_memberships mm
+                JOIN membership_products mp ON mp.id = mm.product_id
+                WHERE mm.member_id = m.id
+                  AND mm.status = 'ACTIVE'
+                  AND mm.start_date &lt;= CURRENT_DATE
+                  AND mm.end_date &gt;= CURRENT_DATE
+                ORDER BY
+                    CASE mp.product_type WHEN 'GYM' THEN 0 WHEN 'COMBINED' THEN 1 ELSE 2 END,
+                    mm.end_date ASC,
+                    mm.id DESC
+                LIMIT 1
+            ) AS remaining_days,
+            COALESCE((
+                SELECT SUM(mm.remaining_pt_sessions)
+                FROM member_memberships mm
+                JOIN membership_products mp ON mp.id = mm.product_id
+                WHERE mm.member_id = m.id
+                  AND mm.status = 'ACTIVE'
+                  AND mm.start_date &lt;= CURRENT_DATE
+                  AND mm.end_date &gt;= CURRENT_DATE
+                  AND mp.product_type IN ('PT', 'COMBINED')
+            ), 0) AS remaining_pt_sessions
+        FROM members m
+        WHERE m.user_id = #{userId}
+          AND m.status = 'ACTIVE'
+    </select>
+
+    <select id="findOpenAttendanceByUserId"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberHomeAttendanceResponse">
+        SELECT a.checked_in_at
+        FROM attendances a
+        JOIN members m ON m.id = a.member_id
+        WHERE m.user_id = #{userId}
+          AND a.checked_out_at IS NULL
+          AND a.attendance_date = CURRENT_DATE
+        ORDER BY a.checked_in_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="findHomeTrainerByUserId"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberHomeTrainerResponse">
+        SELECT
+            t.id AS trainer_id,
+            t.name AS trainer_name,
+            t.specialty
+        FROM members m
+        JOIN trainer_assignments ta
+          ON ta.member_id = m.id
+         AND ta.status = 'ACTIVE'
+        JOIN trainers t
+          ON t.id = ta.trainer_id
+         AND t.status = 'ACTIVE'
+        WHERE m.user_id = #{userId}
+        ORDER BY ta.started_at DESC, ta.id DESC
+        LIMIT 1
+    </select>
+
+    <select id="findHomeRoutineByUserId"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberHomeRoutineResponse">
+        SELECT
+            wr.id AS routine_id,
+            wr.title,
+            wr.description
+        FROM members m
+        JOIN workout_routines wr ON wr.member_id = m.id
+        WHERE m.user_id = #{userId}
+          AND wr.status = 'ACTIVE'
+          AND wr.start_date &lt;= CURRENT_DATE
+          AND (wr.end_date IS NULL OR wr.end_date &gt;= CURRENT_DATE)
+        ORDER BY wr.start_date DESC, wr.id DESC
+        LIMIT 1
+    </select>
+
+    <select id="findTodayRoutineExercises"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberHomeExerciseResponse">
+        SELECT
+            re.exercise_name,
+            re.target_sets,
+            re.target_reps_min,
+            re.target_reps_max,
+            re.target_weight
+        FROM routine_exercises re
+        WHERE re.routine_id = #{routineId}
+          AND (re.day_of_week IS NULL OR re.day_of_week = WEEKDAY(CURRENT_DATE) + 1)
+        ORDER BY re.display_order ASC, re.id ASC
+        LIMIT 5
+    </select>
+
+    <select id="findRecentHomeWorkoutsByUserId"
+            resultType="com.acorn.gymmanagement.member.dto.response.MemberHomeWorkoutResponse">
+        SELECT
+            ws.id AS session_id,
+            COALESCE(wr.title, '개인 운동') AS routine_title,
+            ws.started_at,
+            ws.ended_at,
+            COUNT(DISTINCT wset.exercise_name) AS exercise_count
+        FROM members m
+        JOIN workout_sessions ws ON ws.member_id = m.id
+        LEFT JOIN workout_routines wr ON wr.id = ws.routine_id
+        LEFT JOIN workout_sets wset
+          ON wset.session_id = ws.id
+         AND wset.completed = TRUE
+        WHERE m.user_id = #{userId}
+        GROUP BY ws.id, wr.title, ws.started_at, ws.ended_at
+        ORDER BY ws.started_at DESC
+        LIMIT 3
+    </select>
+
 </mapper>

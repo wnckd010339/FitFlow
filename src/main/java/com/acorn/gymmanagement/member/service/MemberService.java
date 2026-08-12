@@ -12,6 +12,7 @@ import com.acorn.gymmanagement.member.mapper.MemberMapper;
 import com.acorn.gymmanagement.member.model.MemberRegistration;
 import com.acorn.gymmanagement.member.model.MemberUpdate;
 import com.acorn.gymmanagement.member.view.MemberDetailView;
+import com.acorn.gymmanagement.member.view.MemberHomeView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,14 +20,43 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MemberService {
 
+    private static final int WEEKLY_WORKOUT_GOAL = 4;
+
     private final MemberMapper memberMapper;
     private final PasswordEncoder passwordEncoder;
+
+    public MemberHomeView findHomeView(Long userId) {
+        MemberHomeSummaryResponse summary = memberMapper.findHomeSummaryByUserId(userId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "회원 정보를 찾을 수 없습니다."
+                ));
+
+        MemberHomeRoutineResponse routine = memberMapper.findHomeRoutineByUserId(userId)
+                .orElse(null);
+
+        List<MemberHomeExerciseResponse> exercises = routine == null
+                ? List.of()
+                : memberMapper.findTodayRoutineExercises(routine.routineId());
+
+        return new MemberHomeView(
+                LocalDate.now(),
+                WEEKLY_WORKOUT_GOAL,
+                summary,
+                memberMapper.findOpenAttendanceByUserId(userId).orElse(null),
+                memberMapper.findHomeTrainerByUserId(userId).orElse(null),
+                routine,
+                exercises,
+                memberMapper.findRecentHomeWorkoutsByUserId(userId)
+        );
+    }
 
 
     public PageResult<MemberListResponse> search(
