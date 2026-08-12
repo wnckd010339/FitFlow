@@ -14,7 +14,6 @@ import java.util.List;
 public interface PaymentMapper {
 
     Optional<PaymentTargetResponse> findPaymentTargetForUpdate(
-            @Param("memberId") Long memberId,
             @Param("membershipId") Long membershipId
     );
 

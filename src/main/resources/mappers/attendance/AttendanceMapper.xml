@@ -73,4 +73,25 @@
         SET checked_out_at = #{checkedOutAt}, updated_at = CURRENT_TIMESTAMP
         WHERE id = #{attendanceId} AND checked_out_at IS NULL AND checked_in_at &lt;= #{checkedOutAt}
     </update>
+
+    <select id="existsActiveMember" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM members WHERE id = #{memberId} AND status = 'ACTIVE')
+    </select>
+
+    <select id="existsUsableMembership" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM member_memberships
+            WHERE member_id = #{memberId} AND status = 'ACTIVE'
+              AND #{date} BETWEEN start_date AND end_date
+        )
+    </select>
+
+    <select id="existsOpenAttendance" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM attendances WHERE member_id = #{memberId} AND checked_out_at IS NULL)
+    </select>
+
+    <insert id="insertAttendance" useGeneratedKeys="true" keyProperty="attendanceId" keyColumn="id">
+        INSERT INTO attendances(member_id, attendance_date, checked_in_at)
+        VALUES(#{memberId}, #{attendanceDate}, #{checkedInAt})
+    </insert>
 </mapper>

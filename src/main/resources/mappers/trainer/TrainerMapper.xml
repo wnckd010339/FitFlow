@@ -36,4 +36,33 @@
         ORDER BY m.joined_at, m.id
         LIMIT 5
     </select>
+    <select id="findAssignedMembers" resultType="com.acorn.gymmanagement.trainer.dto.response.AssignedMemberResponse">
+        SELECT m.id AS member_id, m.name AS member_name, t.id AS trainer_id, t.name AS trainer_name
+        FROM trainer_assignments ta
+        JOIN members m ON m.id = ta.member_id
+        JOIN trainers t ON t.id = ta.trainer_id
+        WHERE ta.status = 'ACTIVE'
+        ORDER BY t.name, m.name
+    </select>
+
+    <select id="existsWaitingMember" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM members WHERE id = #{memberId} AND status = 'ACTIVE' AND trainer_requested = TRUE)
+    </select>
+    <select id="existsActiveMember" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM members WHERE id = #{memberId} AND status = 'ACTIVE')
+    </select>
+    <select id="existsActiveTrainer" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM trainers WHERE id = #{trainerId} AND status = 'ACTIVE')
+    </select>
+    <select id="existsActiveAssignment" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM trainer_assignments WHERE member_id = #{memberId} AND status = 'ACTIVE')
+    </select>
+    <insert id="insertAssignment">
+        INSERT INTO trainer_assignments(member_id, trainer_id, status, started_at, assigned_by)
+        VALUES(#{memberId}, #{trainerId}, 'ACTIVE', #{startedAt}, #{assignedBy})
+    </insert>
+    <update id="endActiveAssignment">
+        UPDATE trainer_assignments SET status = 'ENDED', ended_at = #{endedAt}
+        WHERE member_id = #{memberId} AND status = 'ACTIVE'
+    </update>
 </mapper>

@@ -2,6 +2,8 @@ package com.acorn.gymmanagement.facility.controller;
 
 import com.acorn.gymmanagement.facility.dto.request.EquipmentRegistrationRequest;
 import com.acorn.gymmanagement.facility.dto.request.EquipmentSearchCondition;
+import com.acorn.gymmanagement.facility.dto.request.MaintenanceRegistrationRequest;
+import com.acorn.gymmanagement.security.SessionUser;
 import com.acorn.gymmanagement.facility.service.FacilityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,16 @@ public class FacilityController {
         }
         facilityService.register(request);
         redirectAttributes.addFlashAttribute("message", "기구가 등록되었습니다.");
+        return "redirect:/admin/facilities";
+    }
+
+    @PostMapping("/{equipmentId}/maintenance")
+    public String recordMaintenance(@PathVariable Long equipmentId,
+                                    @Valid @ModelAttribute MaintenanceRegistrationRequest request,
+                                    @SessionAttribute(SessionUser.SESSION_KEY) SessionUser user,
+                                    RedirectAttributes redirectAttributes) {
+        facilityService.recordMaintenance(equipmentId, request, user.userId());
+        redirectAttributes.addFlashAttribute("message", "시설 점검 이력이 등록되었습니다.");
         return "redirect:/admin/facilities";
     }
 }

@@ -39,7 +39,7 @@ public class MemberApiController {
                 );
     }
 
-    @PatchMapping("/{memberId}fhr")
+    @PatchMapping("/{memberId}")
     public ResponseEntity<ApiResponse<MemberDetailResponse>> updateBasicInformation (
             @PathVariable Long memberId,
             @Valid @RequestBody UpdateMemberRequest request

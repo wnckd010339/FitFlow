@@ -4,9 +4,11 @@
     <title>트레이너 관리 | FitFlow</title>
     <link rel="stylesheet" th:href="@{/css/common/admin-layout.css}" href="/css/common/admin-layout.css">
     <link rel="stylesheet" th:href="@{/css/screens/admin-trainer.css}" href="/css/screens/admin-trainer.css">
+    <link rel="stylesheet" th:href="@{/css/screens/admin-trainer-assignment.css}" href="/css/screens/admin-trainer-assignment.css">
 </head><body><div class="admin-shell">
 <aside th:replace="~{fragments/layout :: adminSidebar('trainers')}"></aside>
 <main class="content"><header class="page-header"><div><h1>트레이너 관리</h1><p>트레이너 현황과 회원 배정 상태를 확인합니다.</p></div></header>
+<p class="notice" th:if="${message}" th:text="${message}"></p>
 <section class="summary-grid">
     <article><span>전체 트레이너</span><strong th:text="${summary.totalCount}">0</strong></article>
     <article><span>활동 중</span><strong th:text="${summary.activeCount}">0</strong></article>
@@ -22,5 +24,23 @@
 <section class="table-card"><div class="card-title"><h2>트레이너 목록</h2><span th:text="|${#lists.size(trainers)}명|">0명</span></div><div class="table-wrap"><table><thead><tr><th>트레이너</th><th>연락처</th><th>전문 분야</th><th>담당 회원</th><th>상태</th><th>최근 배정</th></tr></thead><tbody>
 <tr th:each="t : ${trainers}"><td><strong th:text="${t.name}"></strong></td><td th:text="${t.phone}"></td><td th:text="${t.specialty ?: '-'}"></td><td th:text="|${t.assignedMemberCount}명|"></td><td><span class="status" th:classappend="${t.status == 'ACTIVE'} ? ' active'" th:text="${t.status == 'ACTIVE' ? '활동 중' : '비활동'}"></span></td><td th:text="${t.latestAssignedAt ?: '-'}"></td></tr>
 <tr th:if="${#lists.isEmpty(trainers)}"><td colspan="6" class="empty">조회된 트레이너가 없습니다.</td></tr></tbody></table></div></section>
-<section class="waiting-card"><div><h2>트레이너 배정 대기 회원</h2><p>상담을 희망했지만 아직 담당 트레이너가 없는 회원입니다.</p></div><ul><li th:each="m : ${waitingMembers}"><strong th:text="${m.memberName}"></strong><span th:text="${m.phone}"></span><small th:text="|가입 ${m.joinedAt}|"></small></li><li class="empty" th:if="${#lists.isEmpty(waitingMembers)}">배정 대기 회원이 없습니다.</li></ul></section>
+<section class="waiting-card"><div><h2>트레이너 배정 대기 회원</h2><p>상담을 희망했지만 아직 담당 트레이너가 없는 회원입니다.</p></div><ul><li th:each="m : ${waitingMembers}"><strong th:text="${m.memberName}"></strong><span th:text="${m.phone}"></span><small th:text="|가입 ${m.joinedAt}|"></small><form method="post" th:action="@{/admin/trainers/assignments}"><input type="hidden" name="memberId" th:value="${m.memberId}"><input type="hidden" name="startedAt" th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"><select name="trainerId" required><option value="">트레이너 선택</option><option th:each="t : ${trainers}" th:if="${t.status == 'ACTIVE'}" th:value="${t.trainerId}" th:text="${t.name}"></option></select><button type="submit">배정</button></form></li><li class="empty" th:if="${#lists.isEmpty(waitingMembers)}">배정 대기 회원이 없습니다.</li></ul></section>
+<section class="waiting-card assignment-section">
+    <div class="assignment-intro"><h2>현재 배정</h2><p>담당 트레이너를 변경하거나 배정을 해제할 수 있습니다.</p></div>
+    <ul class="assignment-list">
+        <li class="assignment-item" th:each="m : ${assignedMembers}">
+            <div class="assignment-member"><span class="member-avatar" aria-hidden="true" th:text="${#strings.substring(m.memberName, 0, 1)}">회</span><div><strong th:text="${m.memberName}">회원명</strong><small>담당 회원</small></div></div>
+            <div class="current-trainer"><small>현재 담당</small><strong th:text="${m.trainerName}">트레이너명</strong></div>
+            <div class="assignment-controls">
+                <form class="change-trainer-form" method="post" th:action="@{/admin/trainers/assignments}">
+                    <input type="hidden" name="memberId" th:value="${m.memberId}"><input type="hidden" name="startedAt" th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}">
+                    <label><span class="sr-only">변경할 트레이너</span><select name="trainerId" required><option th:each="t : ${trainers}" th:if="${t.status == 'ACTIVE'}" th:value="${t.trainerId}" th:text="${t.name}" th:selected="${t.trainerId == m.trainerId}"></option></select></label>
+                    <button class="change-button" type="submit">담당 변경</button>
+                </form>
+                <form class="unassign-form" method="post" th:action="@{/admin/trainers/assignments/{id}/end(id=${m.memberId})}"><button class="unassign-button" type="submit">배정 해제</button></form>
+            </div>
+        </li>
+        <li class="empty" th:if="${#lists.isEmpty(assignedMembers)}">현재 배정된 회원이 없습니다.</li>
+    </ul>
+</section>
 </main></div></body></html>

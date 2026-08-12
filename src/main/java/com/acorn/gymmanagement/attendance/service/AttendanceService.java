@@ -3,6 +3,7 @@ package com.acorn.gymmanagement.attendance.service;
 import com.acorn.gymmanagement.attendance.dto.request.AttendanceSearchCondition;
 import com.acorn.gymmanagement.attendance.dto.response.AttendanceListResponse;
 import com.acorn.gymmanagement.attendance.dto.response.AttendanceSummaryResponse;
+import com.acorn.gymmanagement.attendance.form.AttendanceRegistration;
 import com.acorn.gymmanagement.attendance.mapper.AttendanceMapper;
 import com.acorn.gymmanagement.common.exception.BusinessException;
 import com.acorn.gymmanagement.common.exception.ErrorCode;
@@ -38,6 +39,24 @@ public class AttendanceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "퇴실 처리할 입장 기록을 찾을 수 없습니다."));
         if (attendanceMapper.checkout(attendanceId, LocalDateTime.now()) != 1) {
             throw new BusinessException(ErrorCode.CONFLICT, "출석 상태가 변경되어 퇴실 처리하지 못했습니다.");
+        }
+    }
+
+    @Transactional
+    public void checkIn(Long memberId) {
+        LocalDate today = LocalDate.now();
+        if (!attendanceMapper.existsActiveMember(memberId)) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "활성 회원을 찾을 수 없습니다.");
+        }
+        if (!attendanceMapper.existsUsableMembership(memberId, today)) {
+            throw new BusinessException(ErrorCode.CONFLICT, "사용 가능한 회원권이 없습니다.");
+        }
+        if (attendanceMapper.existsOpenAttendance(memberId)) {
+            throw new BusinessException(ErrorCode.CONFLICT, "이미 입장 처리된 회원입니다.");
+        }
+        AttendanceRegistration registration = new AttendanceRegistration(memberId, today, LocalDateTime.now());
+        if (attendanceMapper.insertAttendance(registration) != 1) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "입장 처리에 실패했습니다.");
         }
     }
 }

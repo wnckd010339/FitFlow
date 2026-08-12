@@ -11,6 +11,10 @@
     <main class="content">
         <header class="page-header"><div><h1>출석 관리</h1><p>회원의 입·퇴실 현황과 출석 이력을 확인합니다.</p></div></header>
         <p class="notice" th:if="${message}" th:text="${message}"></p>
+        <form class="filter-panel" method="post" th:action="@{/admin/attendance/check-in}">
+            <label>회원 번호<input type="number" name="memberId" min="1" required placeholder="입장할 회원 번호"></label>
+            <div class="filter-actions"><button type="submit">입장 처리</button></div>
+        </form>
         <section class="summary-grid">
             <article><span>오늘 입장</span><strong th:text="${summary.checkedInCount}">0</strong></article>
             <article><span>현재 이용 중</span><strong th:text="${summary.currentCount}">0</strong></article>

@@ -38,12 +38,11 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse completeMembershipPayment(
-            Long memberId,
             Long membershipId,
             CreatePaymentRequest request
     ) {
         PaymentTargetResponse target = paymentMapper
-                .findPaymentTargetForUpdate(memberId, membershipId)
+                .findPaymentTargetForUpdate(membershipId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.NOT_FOUND,
                         "결제할 회원권을 찾을 수 없습니다."
@@ -71,7 +70,7 @@ public class PaymentService {
         }
 
         PaymentRegistration registration = new PaymentRegistration(
-                memberId,
+                target.memberId(),
                 membershipId,
                 target.price(),
                 request.paymentMethod(),
@@ -84,7 +83,7 @@ public class PaymentService {
                 "결제 내역 저장에 실패했습니다."
         );
 
-        if (membershipMapper.activateAfterPayment(memberId, membershipId) != 1) {
+        if (membershipMapper.activateAfterPayment(target.memberId(), membershipId) != 1) {
             throw new BusinessException(
                     ErrorCode.CONFLICT,
                     "회원권 상태가 변경되어 결제를 완료할 수 없습니다."

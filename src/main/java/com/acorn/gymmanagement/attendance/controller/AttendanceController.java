@@ -36,4 +36,11 @@ public class AttendanceController {
         redirectAttributes.addFlashAttribute("message", "퇴실 처리가 완료되었습니다.");
         return "redirect:/admin/attendance";
     }
+
+    @PostMapping("/check-in")
+    public String checkIn(@RequestParam Long memberId, RedirectAttributes redirectAttributes) {
+        attendanceService.checkIn(memberId);
+        redirectAttributes.addFlashAttribute("message", "입장 처리가 완료되었습니다.");
+        return "redirect:/admin/attendance";
+    }
 }

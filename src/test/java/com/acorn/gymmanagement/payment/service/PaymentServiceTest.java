@@ -46,7 +46,7 @@ class PaymentServiceTest {
         PaymentTargetResponse target = target(MembershipStatus.PENDING_PAYMENT);
         PaymentResponse response = paymentResponse();
 
-        when(paymentMapper.findPaymentTargetForUpdate(1L, 10L)).thenReturn(Optional.of(target));
+        when(paymentMapper.findPaymentTargetForUpdate(10L)).thenReturn(Optional.of(target));
         when(paymentMapper.existsCompletedPaymentByMembershipId(10L)).thenReturn(false);
         when(paymentMapper.insertPayment(any())).thenAnswer(invocation -> {
             invocation.<com.acorn.gymmanagement.payment.model.PaymentRegistration>getArgument(0)
@@ -57,9 +57,8 @@ class PaymentServiceTest {
         when(paymentMapper.findById(100L)).thenReturn(Optional.of(response));
 
         PaymentResponse result = paymentService.completeMembershipPayment(
-                1L,
                 10L,
-                new CreatePaymentRequest(PaymentMethod.CARD)
+                new CreatePaymentRequest(10L, PaymentMethod.CARD)
         );
 
         assertEquals(100L, result.paymentId());
@@ -69,15 +68,14 @@ class PaymentServiceTest {
 
     @Test
     void completePaymentRejectsNonPendingMembership() {
-        when(paymentMapper.findPaymentTargetForUpdate(1L, 10L))
+        when(paymentMapper.findPaymentTargetForUpdate(10L))
                 .thenReturn(Optional.of(target(MembershipStatus.ACTIVE)));
 
         assertThrows(
                 BusinessException.class,
                 () -> paymentService.completeMembershipPayment(
-                        1L,
                         10L,
-                        new CreatePaymentRequest(PaymentMethod.CARD)
+                        new CreatePaymentRequest(10L, PaymentMethod.CARD)
                 )
         );
 
@@ -86,16 +84,15 @@ class PaymentServiceTest {
 
     @Test
     void completePaymentRejectsDuplicatePayment() {
-        when(paymentMapper.findPaymentTargetForUpdate(1L, 10L))
+        when(paymentMapper.findPaymentTargetForUpdate(10L))
                 .thenReturn(Optional.of(target(MembershipStatus.PENDING_PAYMENT)));
         when(paymentMapper.existsCompletedPaymentByMembershipId(10L)).thenReturn(true);
 
         assertThrows(
                 BusinessException.class,
                 () -> paymentService.completeMembershipPayment(
-                        1L,
                         10L,
-                        new CreatePaymentRequest(PaymentMethod.CASH)
+                        new CreatePaymentRequest(10L, PaymentMethod.CASH)
                 )
         );
 

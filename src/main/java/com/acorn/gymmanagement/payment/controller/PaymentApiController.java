@@ -1,13 +1,16 @@
 package com.acorn.gymmanagement.payment.controller;
 
 import com.acorn.gymmanagement.common.response.ApiResponse;
+import com.acorn.gymmanagement.payment.dto.request.CreatePaymentRequest;
 import com.acorn.gymmanagement.payment.dto.request.CreateRefundRequest;
 import com.acorn.gymmanagement.payment.dto.response.PaymentHistoryResponse;
+import com.acorn.gymmanagement.payment.dto.response.PaymentResponse;
 import com.acorn.gymmanagement.payment.dto.response.RefundResponse;
 import com.acorn.gymmanagement.payment.service.PaymentService;
 import com.acorn.gymmanagement.security.SessionUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +42,24 @@ public class PaymentApiController {
                 .body(ApiResponse.success(
                         "환불이 완료되었습니다.",
                         paymentService.refund(paymentId, request, sessionUser.userId())
+                ));
+    }
+
+    @PostMapping("/api/payments")
+    public ResponseEntity<ApiResponse<PaymentResponse>> create(
+            @Valid @RequestBody CreatePaymentRequest request,
+            @SessionAttribute(SessionUser.SESSION_KEY) SessionUser sessionUser
+            ) {
+        PaymentResponse response =
+                paymentService.completeMembershipPayment(
+                        request.membershipId(),
+                        request
+                );
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(
+                        "결제가 완료되었습니다.",
+                        response
                 ));
     }
 }

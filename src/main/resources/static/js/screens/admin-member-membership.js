@@ -99,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const history = actionButton("결제 내역", "history", membership.membershipId);
         actions.append(history);
         if (membership.status === "PENDING_PAYMENT") {
+            actions.append(actionButton("결제 완료", "pay", membership.membershipId));
             const cancel = actionButton("회원권 취소", "cancel", membership.membershipId);
             cancel.classList.add("danger-button");
             actions.append(cancel);
@@ -117,6 +118,10 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = `/admin/memberships?${params}`;
             return;
         }
+        if (button.dataset.action === "pay") {
+            await handlePayment(button);
+            return;
+        }
         const labels = {pause: "일시정지", resume: "이용 재개", cancel: "취소"};
         if (!window.confirm(`이 회원권을 ${labels[button.dataset.action]} 처리하시겠습니까?`)) return;
         setProcessing(true, button);
@@ -127,6 +132,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 {method: "PATCH"}
             );
             showFeedback(result.message || "회원권 상태가 변경되었습니다.", false);
+            await loadMemberships();
+        } catch (error) {
+            showFeedback(error.message, true);
+        } finally {
+            setProcessing(false, button);
+        }
+    }
+
+    async function handlePayment(button) {
+        const paymentMethod = window.prompt("결제수단을 입력해 주세요: CARD, CASH, TRANSFER", "CARD");
+        if (paymentMethod === null) return;
+        const normalized = paymentMethod.trim().toUpperCase();
+        if (!["CARD", "CASH", "TRANSFER"].includes(normalized)) {
+            showFeedback("결제수단은 CARD, CASH, TRANSFER 중 하나여야 합니다.", true);
+            return;
+        }
+        if (!window.confirm("선택한 회원권의 결제를 완료하시겠습니까?")) return;
+        setProcessing(true, button);
+        clearFeedback();
+        try {
+            const result = await request("/api/payments", {
+                method: "POST",
+                body: JSON.stringify({
+                    membershipId: Number(button.dataset.membershipId),
+                    paymentMethod: normalized
+                })
+            });
+            showFeedback(result.message || "결제가 완료되었습니다.", false);
             await loadMemberships();
         } catch (error) {
             showFeedback(error.message, true);
