@@ -3,6 +3,7 @@ package com.acorn.gymmanagement;
 import com.acorn.gymmanagement.dashboard.dto.response.DashboardResponse;
 import com.acorn.gymmanagement.dashboard.dto.response.DashboardSummaryResponse;
 import com.acorn.gymmanagement.dashboard.service.DashboardService;
+import com.acorn.gymmanagement.attendance.service.AttendanceService;
 import com.acorn.gymmanagement.member.dto.response.MemberHomeSummaryResponse;
 import com.acorn.gymmanagement.member.service.MemberService;
 import com.acorn.gymmanagement.member.view.MemberHomeView;
@@ -22,6 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -42,6 +44,9 @@ class SecurityAccessTest {
 
     @MockitoBean
     private MemberService memberService;
+
+    @MockitoBean
+    private AttendanceService attendanceService;
 
     @BeforeEach
     void setUpDashboard() {
@@ -103,6 +108,36 @@ class SecurityAccessTest {
     void memberCanAccessMemberPage() throws Exception {
         mockMvc.perform(get("/member/home").session(session(SessionUser.ROLE_MEMBER)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void memberCanCheckInUsingSessionUser() throws Exception {
+        mockMvc.perform(post("/member/attendance/check-in")
+                        .with(csrf())
+                        .session(session(SessionUser.ROLE_MEMBER)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/member/home"));
+
+        verify(attendanceService).checkInMember(1L);
+    }
+
+    @Test
+    void memberCanCheckOutUsingSessionUser() throws Exception {
+        mockMvc.perform(post("/member/attendance/check-out")
+                        .with(csrf())
+                        .session(session(SessionUser.ROLE_MEMBER)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/member/home"));
+
+        verify(attendanceService).checkoutMember(1L);
+    }
+
+    @Test
+    void adminCannotUseMemberSelfCheckIn() throws Exception {
+        mockMvc.perform(post("/member/attendance/check-in")
+                        .with(csrf())
+                        .session(session(SessionUser.ROLE_ADMIN)))
+                .andExpect(status().isForbidden());
     }
 
     @Test

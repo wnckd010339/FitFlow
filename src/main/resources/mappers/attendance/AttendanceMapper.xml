@@ -68,11 +68,28 @@
         FOR UPDATE
     </select>
 
+    <select id="findOpenAttendanceForMemberForUpdate" resultMap="AttendanceResult">
+        <include refid="attendanceColumns"/>
+        WHERE a.member_id = #{memberId} AND a.checked_out_at IS NULL
+        ORDER BY a.checked_in_at DESC
+        LIMIT 1
+        FOR UPDATE
+    </select>
+
     <update id="checkout">
         UPDATE attendances
         SET checked_out_at = #{checkedOutAt}, updated_at = CURRENT_TIMESTAMP
         WHERE id = #{attendanceId} AND checked_out_at IS NULL AND checked_in_at &lt;= #{checkedOutAt}
     </update>
+
+    <select id="findActiveMemberIdByUserId" resultType="long">
+        SELECT m.id
+        FROM members m
+        JOIN users u ON u.id = m.user_id
+        WHERE u.id = #{userId}
+          AND u.status = 'ACTIVE'
+          AND m.status = 'ACTIVE'
+    </select>
 
     <select id="existsActiveMember" resultType="boolean">
         SELECT EXISTS(SELECT 1 FROM members WHERE id = #{memberId} AND status = 'ACTIVE')

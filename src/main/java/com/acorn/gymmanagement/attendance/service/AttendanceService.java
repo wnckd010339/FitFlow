@@ -35,8 +35,20 @@ public class AttendanceService {
 
     @Transactional
     public void checkout(Long attendanceId) {
-        attendanceMapper.findOpenAttendanceForUpdate(attendanceId)
+        AttendanceListResponse attendance = attendanceMapper.findOpenAttendanceForUpdate(attendanceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "퇴실 처리할 입장 기록을 찾을 수 없습니다."));
+        completeCheckout(attendance.attendanceId());
+    }
+
+    @Transactional
+    public void checkoutMember(Long userId) {
+        Long memberId = findActiveMemberId(userId);
+        AttendanceListResponse attendance = attendanceMapper.findOpenAttendanceForMemberForUpdate(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "체크아웃할 출석 기록이 없습니다."));
+        completeCheckout(attendance.attendanceId());
+    }
+
+    private void completeCheckout(Long attendanceId) {
         if (attendanceMapper.checkout(attendanceId, LocalDateTime.now()) != 1) {
             throw new BusinessException(ErrorCode.CONFLICT, "출석 상태가 변경되어 퇴실 처리하지 못했습니다.");
         }
@@ -58,5 +70,15 @@ public class AttendanceService {
         if (attendanceMapper.insertAttendance(registration) != 1) {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "입장 처리에 실패했습니다.");
         }
+    }
+
+    @Transactional
+    public void checkInMember(Long userId) {
+        checkIn(findActiveMemberId(userId));
+    }
+
+    private Long findActiveMemberId(Long userId) {
+        return attendanceMapper.findActiveMemberIdByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "활성 회원 정보를 찾을 수 없습니다."));
     }
 }
