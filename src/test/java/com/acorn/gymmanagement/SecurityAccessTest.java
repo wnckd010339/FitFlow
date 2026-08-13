@@ -7,6 +7,7 @@ import com.acorn.gymmanagement.attendance.service.AttendanceService;
 import com.acorn.gymmanagement.member.dto.response.MemberHomeSummaryResponse;
 import com.acorn.gymmanagement.member.service.MemberService;
 import com.acorn.gymmanagement.member.view.MemberHomeView;
+import com.acorn.gymmanagement.mypage.service.MemberPortalService;
 import com.acorn.gymmanagement.security.SessionUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,9 @@ class SecurityAccessTest {
 
     @MockitoBean
     private AttendanceService attendanceService;
+
+    @MockitoBean
+    private MemberPortalService memberPortalService;
 
     @BeforeEach
     void setUpDashboard() {
@@ -107,6 +111,20 @@ class SecurityAccessTest {
     @Test
     void memberCanAccessMemberPage() throws Exception {
         mockMvc.perform(get("/member/home").session(session(SessionUser.ROLE_MEMBER)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void memberCanAccessMemberPortalPages() throws Exception {
+        MockHttpSession memberSession = session(SessionUser.ROLE_MEMBER);
+
+        mockMvc.perform(get("/member/memberships").session(memberSession))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/member/attendance").session(memberSession))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/member/workouts").session(memberSession))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/member/payments").session(memberSession))
                 .andExpect(status().isOk());
     }
 

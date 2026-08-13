@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acorn.gymmanagement.mypage.mapper.MemberPortalMapper">
+    <select id="findActiveMemberId" resultType="long">SELECT id FROM members WHERE user_id = #{userId} AND status = 'ACTIVE'</select>
+    <select id="findMemberships" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberMembershipView">
+        SELECT mm.id AS membership_id, mp.name AS product_name, mp.product_type, mm.start_date, mm.end_date, mm.remaining_pt_sessions, mm.status,
+               CASE WHEN mm.status = 'ACTIVE' AND mm.end_date &gt;= CURRENT_DATE THEN DATEDIFF(mm.end_date, CURRENT_DATE) END AS remaining_days
+        FROM members m JOIN member_memberships mm ON mm.member_id=m.id JOIN membership_products mp ON mp.id=mm.product_id
+        WHERE m.user_id=#{userId} ORDER BY mm.start_date DESC, mm.id DESC
+    </select>
+    <select id="findAttendances" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberAttendanceView">
+        SELECT a.id AS attendance_id, a.attendance_date, a.checked_in_at, a.checked_out_at FROM attendances a JOIN members m ON m.id=a.member_id
+        WHERE m.user_id=#{userId} ORDER BY a.checked_in_at DESC LIMIT 30
+    </select>
+    <select id="findActiveRoutine" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberRoutineView">
+        SELECT wr.id AS routine_id, wr.title, wr.description, wr.start_date, wr.end_date, re.exercise_name, re.target_sets, re.target_reps_min, re.target_reps_max, re.target_weight, re.day_of_week, re.display_order
+        FROM members m JOIN workout_routines wr ON wr.member_id=m.id LEFT JOIN routine_exercises re ON re.routine_id=wr.id
+        WHERE m.user_id=#{userId} AND wr.status='ACTIVE' AND wr.start_date &lt;= CURRENT_DATE AND (wr.end_date IS NULL OR wr.end_date &gt;= CURRENT_DATE)
+        ORDER BY wr.start_date DESC, wr.id DESC, re.display_order, re.id
+    </select>
+    <select id="findWorkouts" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberWorkoutView">
+        SELECT ws.id AS session_id, COALESCE(wr.title,'개인 운동') AS routine_title, ws.started_at, ws.ended_at, ws.memo, COUNT(wset.id) AS exercise_count
+        FROM members m JOIN workout_sessions ws ON ws.member_id=m.id LEFT JOIN workout_routines wr ON wr.id=ws.routine_id LEFT JOIN workout_sets wset ON wset.session_id=ws.id
+        WHERE m.user_id=#{userId} GROUP BY ws.id, wr.title, ws.started_at, ws.ended_at, ws.memo ORDER BY ws.started_at DESC LIMIT 20
+    </select>
+    <select id="findPayments" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberPaymentView">
+        SELECT * FROM (
+          SELECT p.id AS transaction_id, 'PAYMENT' AS transaction_type, mp.name AS product_name, p.payment_method, p.amount, p.status, p.paid_at AS occurred_at
+          FROM payments p JOIN members m ON m.id=p.member_id LEFT JOIN member_memberships mm ON mm.id=p.member_membership_id LEFT JOIN membership_products mp ON mp.id=mm.product_id WHERE m.user_id=#{userId}
+          UNION ALL
+          SELECT r.id, 'REFUND', mp.name, p.payment_method, r.amount, r.status, r.refunded_at
+          FROM refunds r JOIN payments p ON p.id=r.payment_id JOIN members m ON m.id=p.member_id LEFT JOIN member_memberships mm ON mm.id=p.member_membership_id LEFT JOIN membership_products mp ON mp.id=mm.product_id WHERE m.user_id=#{userId}
+        ) history ORDER BY occurred_at DESC, transaction_id DESC
+    </select>
+    <select id="findWorkoutForEdit" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberWorkoutEditView">
+        SELECT ws.id AS session_id, ws.routine_id, ws.started_at, ws.ended_at, wset.exercise_name,
+               COUNT(wset.id) AS sets, MAX(wset.weight) AS weight, MAX(wset.reps) AS reps, ws.memo
+        FROM workout_sessions ws JOIN members m ON m.id=ws.member_id LEFT JOIN workout_sets wset ON wset.session_id=ws.id
+        WHERE m.user_id=#{userId} AND ws.id=#{sessionId}
+        GROUP BY ws.id, ws.routine_id, ws.started_at, ws.ended_at, wset.exercise_name, ws.memo
+        ORDER BY wset.exercise_name LIMIT 1
+    </select>
+    <insert id="insertWorkoutSession" useGeneratedKeys="true" keyProperty="sessionId" keyColumn="id">
+        INSERT INTO workout_sessions(member_id, routine_id, started_at, ended_at, memo) VALUES(#{memberId}, #{routineId}, #{startedAt}, #{endedAt}, #{memo})
+    </insert>
+    <insert id="insertWorkoutSet">INSERT INTO workout_sets(session_id, exercise_name, set_number, weight, reps, completed) VALUES(#{sessionId}, #{exerciseName}, #{setNumber}, #{weight}, #{reps}, TRUE)</insert>
+    <update id="updateWorkoutSession">UPDATE workout_sessions SET routine_id=#{routineId}, started_at=#{startedAt}, ended_at=#{endedAt}, memo=#{memo}, updated_at=CURRENT_TIMESTAMP WHERE id=#{sessionId} AND member_id=#{memberId}</update>
+    <delete id="deleteWorkoutSets">DELETE FROM workout_sets WHERE session_id=#{sessionId}</delete>
+</mapper>
