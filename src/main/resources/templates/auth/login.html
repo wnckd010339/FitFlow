@@ -30,7 +30,7 @@
             <div class="feature-card">
                 <p class="feature-title">회원 전용 기능</p>
                 <ul class="feature-list">
-                    <li>QR 출석</li>
+                    <li>간편 출석</li>
                     <li>회원권 조회</li>
                     <li>운동 루틴</li>
                     <li>운동 기록</li>
@@ -58,6 +58,12 @@
                 <h2 id="login-heading">FitFlow 시작하기</h2>
                 <p>가입한 방식으로 로그인해 주세요.</p>
             </header>
+
+            <div class="form-alert form-alert--success"
+                 th:if="${successMessage}"
+                 role="status">
+                <span th:text="${successMessage}">회원가입이 완료되었습니다.</span>
+            </div>
 
             <div class="form-alert form-alert--error"
                  th:if="${errorMessage}"

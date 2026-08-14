@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FitFlow 회원가입">
+    <title>회원가입 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/common/base.css}" href="/css/common/base.css">
+    <link rel="stylesheet" th:href="@{/css/screens/login.css}" href="/css/screens/login.css">
+    <link rel="stylesheet" th:href="@{/css/screens/signup.css}" href="/css/screens/signup.css">
+</head>
+<body class="login-page signup-page">
+<main class="signup-layout">
+    <section class="signup-brand">
+        <a class="brand" th:href="@{/login}" href="/login" aria-label="FitFlow 로그인 홈">
+            <span class="brand-mark" aria-hidden="true">F</span>
+            <span class="brand-name">FitFlow</span>
+        </a>
+        <div>
+            <p class="brand-eyebrow">START YOUR FITFLOW</p>
+            <h1>운동을 꾸준히 이어갈<br><strong>나만의 계정을 만드세요.</strong></h1>
+            <p>회원권, 출석, 운동 기록과 결제 내역을 한곳에서 확인할 수 있습니다.</p>
+        </div>
+        <small>담당 트레이너 배정은 원하는 경우에만 요청할 수 있습니다.</small>
+    </section>
+
+    <section class="signup-panel" aria-labelledby="signup-heading">
+        <div class="signup-card">
+            <header class="auth-header">
+                <p class="auth-eyebrow">CREATE ACCOUNT</p>
+                <h2 id="signup-heading">회원가입</h2>
+                <p>기본 정보를 입력하고 FitFlow를 시작하세요.</p>
+            </header>
+
+            <div class="form-alert form-alert--error" th:if="${errorMessage}" role="alert">
+                <span th:text="${errorMessage}">회원가입 정보를 확인해 주세요.</span>
+            </div>
+
+            <form class="signup-form" th:action="@{/signup}" th:object="${signupForm}" method="post" novalidate>
+                <div class="signup-grid">
+                    <div class="form-field">
+                        <label for="name">이름</label>
+                        <input id="name" th:field="*{name}" autocomplete="name" placeholder="이름을 입력해 주세요">
+                        <p class="field-error" th:errors="*{name}"></p>
+                    </div>
+                    <div class="form-field">
+                        <label for="phone">연락처</label>
+                        <input id="phone" th:field="*{phone}" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000">
+                        <p class="field-error" th:errors="*{phone}"></p>
+                    </div>
+                    <div class="form-field">
+                        <label for="birthDate">생년월일</label>
+                        <input id="birthDate" type="date" th:field="*{birthDate}" autocomplete="bday">
+                        <p class="field-error" th:errors="*{birthDate}"></p>
+                    </div>
+                    <div class="form-field">
+                        <label for="gender">성별</label>
+                        <select id="gender" th:field="*{gender}">
+                            <option value="">선택해 주세요</option>
+                            <option value="MALE">남성</option>
+                            <option value="FEMALE">여성</option>
+                        </select>
+                        <p class="field-error" th:errors="*{gender}"></p>
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label for="loginId">로그인 ID</label>
+                    <input id="loginId" th:field="*{loginId}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="영문과 숫자 4자 이상">
+                    <p class="field-error" th:errors="*{loginId}"></p>
+                </div>
+
+                <div class="signup-grid">
+                    <div class="form-field">
+                        <label for="password">비밀번호</label>
+                        <input id="password" type="password" th:field="*{password}" autocomplete="new-password" placeholder="8자 이상">
+                        <p class="field-error" th:errors="*{password}"></p>
+                    </div>
+                    <div class="form-field">
+                        <label for="passwordConfirmation">비밀번호 확인</label>
+                        <input id="passwordConfirmation" type="password" th:field="*{passwordConfirmation}" autocomplete="new-password" placeholder="한 번 더 입력해 주세요">
+                        <p class="field-error" th:errors="*{passwordConfirmation}"></p>
+                    </div>
+                </div>
+                <label class="trainer-request">
+                    <input type="checkbox" th:field="*{trainerRequested}">
+                    <span><strong>담당 트레이너 배정을 희망합니다.</strong><small>가입 후 센터에서 상담하여 배정합니다.</small></span>
+                </label>
+
+                <button class="button button--primary" type="submit">회원가입 완료</button>
+            </form>
+
+            <p class="login-link">이미 계정이 있으신가요? <a th:href="@{/login}" href="/login">로그인</a></p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

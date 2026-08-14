@@ -1,6 +1,7 @@
 package com.acorn.gymmanagement.mypage.mapper;
 
 import com.acorn.gymmanagement.mypage.dto.response.*;
+import com.acorn.gymmanagement.mypage.form.MemberProfileForm;
 import com.acorn.gymmanagement.mypage.model.WorkoutSessionRegistration;
 import com.acorn.gymmanagement.mypage.model.WorkoutSetRegistration;
 import org.apache.ibatis.annotations.Mapper;
@@ -18,6 +19,9 @@ public interface MemberPortalMapper {
     List<MemberWorkoutView> findWorkouts(@Param("userId") Long userId);
     Optional<MemberWorkoutEditView> findWorkoutForEdit(@Param("userId") Long userId, @Param("sessionId") Long sessionId);
     List<MemberPaymentView> findPayments(@Param("userId") Long userId);
+    Optional<MemberProfileView> findProfile(@Param("userId") Long userId);
+    int updateMemberProfile(@Param("userId") Long userId, @Param("form") MemberProfileForm form);
+    int updateUserEmail(@Param("userId") Long userId, @Param("email") String email);
     int insertWorkoutSession(WorkoutSessionRegistration registration);
     int insertWorkoutSet(WorkoutSetRegistration registration);
     int updateWorkoutSession(WorkoutSessionRegistration registration);

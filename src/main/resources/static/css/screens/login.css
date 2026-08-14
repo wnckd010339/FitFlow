@@ -232,6 +232,12 @@
     border: 1px solid #f3d1cf;
 }
 
+.form-alert--success {
+    color: #214c44;
+    background: #edf7f2;
+    border: 1px solid #c9e7db;
+}
+
 .form-alert svg,
 .account-notice > svg {
     flex: 0 0 auto;

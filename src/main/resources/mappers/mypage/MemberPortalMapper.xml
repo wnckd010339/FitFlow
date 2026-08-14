@@ -3,7 +3,8 @@
 <mapper namespace="com.acorn.gymmanagement.mypage.mapper.MemberPortalMapper">
     <select id="findActiveMemberId" resultType="long">SELECT id FROM members WHERE user_id = #{userId} AND status = 'ACTIVE'</select>
     <select id="findMemberships" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberMembershipView">
-        SELECT mm.id AS membership_id, mp.name AS product_name, mp.product_type, mm.start_date, mm.end_date, mm.remaining_pt_sessions, mm.status,
+        SELECT mm.id AS membership_id, mp.name AS product_name, mp.product_type, mm.start_date, mm.end_date, mm.remaining_pt_sessions,
+               CASE WHEN mm.status='ACTIVE' AND mm.end_date &lt; CURRENT_DATE THEN 'EXPIRED' ELSE mm.status END AS status,
                CASE WHEN mm.status = 'ACTIVE' AND mm.end_date &gt;= CURRENT_DATE THEN DATEDIFF(mm.end_date, CURRENT_DATE) END AS remaining_days
         FROM members m JOIN member_memberships mm ON mm.member_id=m.id JOIN membership_products mp ON mp.id=mm.product_id
         WHERE m.user_id=#{userId} ORDER BY mm.start_date DESC, mm.id DESC
@@ -19,7 +20,7 @@
         ORDER BY wr.start_date DESC, wr.id DESC, re.display_order, re.id
     </select>
     <select id="findWorkouts" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberWorkoutView">
-        SELECT ws.id AS session_id, COALESCE(wr.title,'개인 운동') AS routine_title, ws.started_at, ws.ended_at, ws.memo, COUNT(wset.id) AS exercise_count
+        SELECT ws.id AS session_id, COALESCE(wr.title,'개인 운동') AS routine_title, ws.started_at, ws.ended_at, ws.memo, COUNT(DISTINCT wset.exercise_name) AS exercise_count
         FROM members m JOIN workout_sessions ws ON ws.member_id=m.id LEFT JOIN workout_routines wr ON wr.id=ws.routine_id LEFT JOIN workout_sets wset ON wset.session_id=ws.id
         WHERE m.user_id=#{userId} GROUP BY ws.id, wr.title, ws.started_at, ws.ended_at, ws.memo ORDER BY ws.started_at DESC LIMIT 20
     </select>
@@ -32,6 +33,30 @@
           FROM refunds r JOIN payments p ON p.id=r.payment_id JOIN members m ON m.id=p.member_id LEFT JOIN member_memberships mm ON mm.id=p.member_membership_id LEFT JOIN membership_products mp ON mp.id=mm.product_id WHERE m.user_id=#{userId}
         ) history ORDER BY occurred_at DESC, transaction_id DESC
     </select>
+    <select id="findProfile" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberProfileView">
+        SELECT m.id AS member_id, lc.login_id, m.name, m.phone, m.birth_date, m.gender,
+               u.email, m.status,
+               (SELECT MIN(DATEDIFF(mm.end_date, CURRENT_DATE)) FROM member_memberships mm
+                WHERE mm.member_id=m.id AND mm.status='ACTIVE' AND mm.start_date &lt;= CURRENT_DATE AND mm.end_date &gt;= CURRENT_DATE) AS remaining_days,
+               (SELECT COUNT(DISTINCT a.attendance_date) FROM attendances a
+                WHERE a.member_id=m.id AND a.attendance_date &gt;= DATE_FORMAT(CURRENT_DATE, '%Y-%m-01')
+                  AND a.attendance_date &lt; DATE_ADD(DATE_FORMAT(CURRENT_DATE, '%Y-%m-01'), INTERVAL 1 MONTH)) AS monthly_attendance_count,
+               COALESCE((SELECT SUM(mm.remaining_pt_sessions) FROM member_memberships mm
+                         JOIN membership_products mp ON mp.id=mm.product_id
+                         WHERE mm.member_id=m.id AND mm.status='ACTIVE' AND mm.start_date &lt;= CURRENT_DATE
+                           AND mm.end_date &gt;= CURRENT_DATE AND mp.product_type IN ('PT','COMBINED')),0) AS remaining_pt_sessions
+        FROM members m JOIN users u ON u.id=m.user_id
+        LEFT JOIN user_local_credentials lc ON lc.user_id=u.id
+        WHERE m.user_id=#{userId} AND m.status='ACTIVE'
+    </select>
+    <update id="updateMemberProfile">
+        UPDATE members SET name=#{form.name}, phone=#{form.phone}, birth_date=#{form.birthDate},
+            gender=#{form.gender}, updated_at=CURRENT_TIMESTAMP
+        WHERE user_id=#{userId} AND status='ACTIVE'
+    </update>
+    <update id="updateUserEmail">
+        UPDATE users SET email=#{email}, updated_at=CURRENT_TIMESTAMP WHERE id=#{userId}
+    </update>
     <select id="findWorkoutForEdit" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberWorkoutEditView">
         SELECT ws.id AS session_id, ws.routine_id, ws.started_at, ws.ended_at, wset.exercise_name,
                COUNT(wset.id) AS sets, MAX(wset.weight) AS weight, MAX(wset.reps) AS reps, ws.memo

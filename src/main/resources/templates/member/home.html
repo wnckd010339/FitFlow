@@ -9,7 +9,7 @@
 <body>
 <header class="member-header">
     <a class="brand" href="/member/home"><span>F</span>FitFlow</a>
-    <nav><a class="active" href="/member/home">홈</a><a href="/member/memberships">회원권</a><a href="/member/attendance">출석</a><a href="/member/workouts">운동</a><a href="/member/payments">결제 내역</a></nav>
+    <nav><a class="active" href="/member/home">홈</a><a href="/member/memberships">회원권</a><a href="/member/attendance">출석</a><a href="/member/workouts">운동</a><a href="/member/payments">결제 내역</a><a href="/member/profile">내 정보</a></nav>
     <div class="member-profile"><button type="button" aria-label="알림">●</button><span th:text="${#strings.substring(home.summary.memberName, 0, 1)}">김</span><strong th:text="${home.summary.memberName}">김지훈</strong>
         <form th:action="@{/logout}" action="/logout" method="post"><button type="submit">로그아웃</button></form>
     </div>
@@ -38,7 +38,7 @@
     <section class="member-grid">
         <article class="member-card routine">
             <div class="card-heading"><div><p>TODAY'S ROUTINE</p><h2>오늘의 운동</h2></div><a href="/member/workouts">전체 루틴</a></div>
-            <div class="routine-title" th:if="${home.routine != null}"><span>TODAY</span><div><strong th:text="${home.routine.title}">하체 근력 강화</strong><small th:text="${home.exercises.isEmpty() ? '오늘 예정된 세부 운동이 없습니다.' : '운동 ' + home.exercises.size() + '개'}">운동 5개</small></div></div>
+            <div class="routine-title" th:if="${home.routine != null}"><span>TODAY</span><div><strong th:text="${home.routine.title}">하체 근력 강화</strong><small th:text="${home.exercises.isEmpty() ? '오늘 예정된 세부 운동이 없습니다.' : '운동 ' + home.exercises.size() + '종목'}">운동 5종목</small></div></div>
             <div class="routine-title" th:unless="${home.routine != null}"><span>REST</span><div><strong>활성화된 루틴이 없습니다.</strong><small>트레이너와 다음 운동 계획을 만들어 보세요.</small></div></div>
             <ul th:if="${!home.exercises.isEmpty()}">
                 <li th:each="exercise, status : ${home.exercises}"><span th:text="${#numbers.formatInteger(status.count, 2)}">01</span><div><strong th:text="${exercise.exerciseName}">백 스쿼트</strong><small th:text="${exercise.targetDescription()}">60kg · 4세트 · 8–10회</small></div><button type="button">시작</button></li>
@@ -66,7 +66,7 @@
         <article class="member-card activity">
             <div class="card-heading"><div><p>RECENT ACTIVITY</p><h2>최근 운동 기록</h2></div><a href="/member/workouts">기록 전체보기</a></div>
             <div class="activity-list" th:if="${!home.recentWorkouts.isEmpty()}">
-                <div th:each="workout : ${home.recentWorkouts}"><time th:text="${#temporals.format(workout.startedAt, 'MM.dd')}">07.28</time><span>운동</span><strong th:text="${workout.routineTitle}">근력 루틴</strong><small th:text="${workout.durationMinutes() == null ? '운동 ' + workout.exerciseCount + '개 · 진행 중' : workout.durationMinutes() > 0 ? '운동 ' + workout.exerciseCount + '개 · ' + workout.durationMinutes() + '분' : '운동 ' + workout.exerciseCount + '개 · 시간 미기록'}">운동 6개 · 63분</small><b th:text="${workout.endedAt != null ? '완료' : '진행 중'}">완료</b></div>
+                <div th:each="workout : ${home.recentWorkouts}"><time th:text="${#temporals.format(workout.startedAt, 'MM.dd')}">07.28</time><span>운동</span><strong th:text="${workout.routineTitle}">근력 루틴</strong><small th:text="${workout.durationMinutes() == null ? '운동 ' + workout.exerciseCount + '종목 · 진행 중' : workout.durationMinutes() > 0 ? '운동 ' + workout.exerciseCount + '종목 · ' + workout.durationMinutes() + '분' : '운동 ' + workout.exerciseCount + '종목 · 시간 미기록'}">운동 6종목 · 63분</small><b th:text="${workout.endedAt != null ? '완료' : '진행 중'}">완료</b></div>
             </div>
             <p class="empty-state" th:if="${home.recentWorkouts.isEmpty()}">아직 저장된 운동 기록이 없습니다.</p>
         </article>

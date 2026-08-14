@@ -1,6 +1,7 @@
 package com.acorn.gymmanagement.mypage.controller;
 
 import com.acorn.gymmanagement.mypage.form.WorkoutRecordForm;
+import com.acorn.gymmanagement.mypage.form.MemberProfileForm;
 import com.acorn.gymmanagement.mypage.service.MemberPortalService;
 import com.acorn.gymmanagement.security.SessionUser;
 import jakarta.validation.Valid;
@@ -80,5 +81,28 @@ public class MemberPortalController {
     public String payments(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser user, Model model) {
         model.addAttribute("payments", memberPortalService.payments(user.userId()));
         return "member/payments";
+    }
+
+    @GetMapping("/profile")
+    public String profile(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser user, Model model) {
+        var profile = memberPortalService.profile(user.userId());
+        model.addAttribute("profile", profile);
+        model.addAttribute("memberProfileForm", new MemberProfileForm(
+                profile.name(), profile.phone(), profile.birthDate(), profile.gender(), profile.email()
+        ));
+        return "member/profile";
+    }
+
+    @PostMapping("/profile")
+    public String updateProfile(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser user,
+                                @Valid @ModelAttribute MemberProfileForm memberProfileForm,
+                                BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("profile", memberPortalService.profile(user.userId()));
+            return "member/profile";
+        }
+        memberPortalService.updateProfile(user.userId(), memberProfileForm);
+        redirectAttributes.addFlashAttribute("message", "내 정보가 수정되었습니다.");
+        return "redirect:/member/profile";
     }
 }

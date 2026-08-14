@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/login",
+                                "/signup",
                                 "/error",
                                 "/error/**",
                                 "/favicon.ico",

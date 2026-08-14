@@ -5,9 +5,12 @@ import com.acorn.gymmanagement.dashboard.dto.response.DashboardSummaryResponse;
 import com.acorn.gymmanagement.dashboard.service.DashboardService;
 import com.acorn.gymmanagement.attendance.service.AttendanceService;
 import com.acorn.gymmanagement.member.dto.response.MemberHomeSummaryResponse;
+import com.acorn.gymmanagement.member.dto.request.CreateMemberRequest;
 import com.acorn.gymmanagement.member.service.MemberService;
 import com.acorn.gymmanagement.member.view.MemberHomeView;
 import com.acorn.gymmanagement.mypage.service.MemberPortalService;
+import com.acorn.gymmanagement.mypage.dto.response.MemberProfileView;
+import com.acorn.gymmanagement.member.model.MemberGender;
 import com.acorn.gymmanagement.security.SessionUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +28,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -69,6 +73,11 @@ class SecurityAccessTest {
                 LocalDate.of(2026, 8, 12), 4, memberSummary,
                 null, null, null, List.of(), List.of()
         ));
+        when(memberPortalService.profile(1L)).thenReturn(new MemberProfileView(
+                1L, "tester", "테스트 회원", "010-1234-5678",
+                LocalDate.of(1990, 1, 1), MemberGender.MALE,
+                "tester@fitflow.com", "ACTIVE", 10, 3, 5
+        ));
     }
 
     @Test
@@ -78,6 +87,57 @@ class SecurityAccessTest {
                 .andExpect(content().string(
                         org.hamcrest.Matchers.containsString("name=\"_csrf\"")
                 ));
+    }
+
+    @Test
+    void signupPageIsPublic() throws Exception {
+        mockMvc.perform(get("/signup"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(
+                        org.hamcrest.Matchers.containsString("회원가입")
+                ));
+    }
+
+    @Test
+    void anonymousUserCanSignupWithLocalAccount() throws Exception {
+        CreateMemberRequest request = new CreateMemberRequest(
+                "신규 회원", "010-9876-5432", LocalDate.of(1995, 5, 10),
+                MemberGender.FEMALE, "newmember", "password123", true
+        );
+
+        mockMvc.perform(post("/signup")
+                        .with(csrf())
+                        .param("name", "신규 회원")
+                        .param("phone", "010-9876-5432")
+                        .param("birthDate", "1995-05-10")
+                        .param("gender", "FEMALE")
+                        .param("loginId", "newmember")
+                        .param("password", "password123")
+                        .param("passwordConfirmation", "password123")
+                        .param("trainerRequested", "true"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+
+        verify(memberService).create(request);
+    }
+
+    @Test
+    void signupRejectsMismatchedPasswordConfirmation() throws Exception {
+        mockMvc.perform(post("/signup")
+                        .with(csrf())
+                        .param("name", "신규 회원")
+                        .param("phone", "010-9876-5432")
+                        .param("birthDate", "1995-05-10")
+                        .param("gender", "FEMALE")
+                        .param("loginId", "newmember")
+                        .param("password", "password123")
+                        .param("passwordConfirmation", "different123"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(
+                        org.hamcrest.Matchers.containsString("비밀번호와 비밀번호 확인이 일치하지 않습니다.")
+                ));
+
+        verify(memberService, never()).create(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -125,6 +185,8 @@ class SecurityAccessTest {
         mockMvc.perform(get("/member/workouts").session(memberSession))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/member/payments").session(memberSession))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/member/profile").session(memberSession))
                 .andExpect(status().isOk());
     }
 
