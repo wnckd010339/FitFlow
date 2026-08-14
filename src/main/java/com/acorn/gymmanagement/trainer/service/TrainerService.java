@@ -13,6 +13,8 @@ import com.acorn.gymmanagement.common.exception.ErrorCode;
 import com.acorn.gymmanagement.trainer.dto.request.AssignTrainerRequest;
 import com.acorn.gymmanagement.trainer.model.TrainerAssignmentRegistration;
 import com.acorn.gymmanagement.trainer.dto.response.AssignedMemberResponse;
+import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeMemberResponse;
+import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeProfileResponse;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -27,6 +29,18 @@ public class TrainerService {
     public List<TrainerListResponse> findTrainers(TrainerSearchCondition condition) { return trainerMapper.findTrainers(condition); }
     public List<WaitingMemberResponse> findWaitingMembers() { return trainerMapper.findWaitingMembers(); }
     public List<AssignedMemberResponse> findAssignedMembers() { return trainerMapper.findAssignedMembers(); }
+
+    public TrainerHomeProfileResponse getHomeProfile(Long userId) {
+        TrainerHomeProfileResponse profile = trainerMapper.findHomeProfile(userId);
+        if (profile == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "트레이너 정보를 찾을 수 없습니다.");
+        }
+        return profile;
+    }
+
+    public List<TrainerHomeMemberResponse> findHomeMembers(Long userId) {
+        return trainerMapper.findHomeMembers(userId);
+    }
 
     @Transactional
     public void assign(AssignTrainerRequest request, Long adminUserId) {

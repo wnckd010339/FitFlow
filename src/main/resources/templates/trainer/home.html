@@ -8,55 +8,35 @@
 </head>
 <body>
 <header class="trainer-header">
-    <a class="brand" href="/trainer/home"><span>F</span>FitFlow <small>TRAINER</small></a>
-    <nav><a class="active" href="/trainer/home">홈</a><a href="#">담당 회원</a><a href="#">운동 루틴</a><a href="#">일정</a></nav>
-    <div class="profile"><span>김</span><div><strong>김도윤 트레이너</strong><small>근력 향상 · 자세 교정</small></div>
-        <form th:action="@{/logout}" action="/logout" method="post"><button>로그아웃</button></form>
-    </div>
+    <a class="brand" th:href="@{/trainer/home}" href="/trainer/home"><span>F</span>FitFlow <small>TRAINER</small></a>
+    <nav><a class="active" th:href="@{/trainer/home}" href="/trainer/home">홈</a><a th:href="@{/trainer/members}" href="/trainer/members">담당 회원</a><a th:href="@{/trainer/routines}" href="/trainer/routines">운동 루틴</a><a th:href="@{/trainer/workouts}" href="/trainer/workouts">운동 기록</a><a th:href="@{/trainer/profile}" href="/trainer/profile">내 프로필</a></nav>
+    <div class="profile"><span th:text="${#strings.substring(profile.name, 0, 1)}">김</span><div><strong th:text="${profile.name + ' 트레이너'}">김도윤 트레이너</strong><small th:text="${profile.specialty}">근력 향상</small></div><form th:action="@{/logout}" action="/logout" method="post"><button>로그아웃</button></form></div>
 </header>
-
 <main class="trainer-main">
-    <section class="welcome">
-        <div><p>THURSDAY, JULY 30</p><h1>좋은 오후예요, 김도윤 트레이너님!</h1><span>오늘 예정된 수업과 담당 회원의 운동 현황을 확인해 보세요.</span></div>
-        <a href="#">새 루틴 만들기 <b>＋</b></a>
-    </section>
-
+    <section class="welcome"><div><p>TRAINER HOME</p><h1 th:text="${profile.name + ' 트레이너님, 안녕하세요!'}">김도윤 트레이너님, 안녕하세요!</h1><span>담당 회원의 루틴과 최근 운동 기록을 확인해 보세요.</span></div></section>
     <section class="trainer-metrics">
-        <article><span>오늘 PT 일정</span><strong>4<small>건</small></strong><p>다음 수업 14:00</p></article>
-        <article><span>담당 회원</span><strong>18<small>명</small></strong><p>이번 주 신규 2명</p></article>
-        <article><span>루틴 수행률</span><strong>82<small>%</small></strong><p>지난주보다 6% 상승</p></article>
-        <article><span>피드백 대기</span><strong>5<small>건</small></strong><p>오늘 확인이 필요해요</p></article>
+        <article><span>담당 회원</span><strong th:text="${profile.assignedMemberCount}">0</strong><p>현재 활성 배정 기준</p></article>
+        <article><span>활성 루틴</span><strong th:text="${profile.activeRoutineCount}">0</strong><p>내가 등록한 진행 중 루틴</p></article>
+        <article><span>이번 주 운동 기록</span><strong th:text="${profile.weeklyWorkoutCount}">0</strong><p>담당 회원이 남긴 기록</p></article>
+        <article><span>최근 7일 운동 회원</span><strong th:text="${profile.membersWithRecentWorkoutCount}">0</strong><p>운동 기록이 있는 담당 회원</p></article>
     </section>
-
     <section class="trainer-grid">
-        <article class="card schedule">
-            <div class="card-title"><div><p>TODAY</p><h2>오늘의 PT 일정</h2></div><a href="#">전체 일정</a></div>
-            <ol>
-                <li class="done"><time>10:00</time><div><strong>박서준</strong><span>상체 근력 · 완료</span></div><b>완료</b></li>
-                <li class="active"><time>14:00</time><div><strong>김지훈</strong><span>하체 근력 · PT 6/10회</span></div><b>50분 후</b></li>
-                <li><time>16:30</time><div><strong>이서연</strong><span>체형 교정 · PT 3/10회</span></div><b>예정</b></li>
-                <li><time>19:00</time><div><strong>정현우</strong><span>전신 운동 · PT 8/10회</span></div><b>예정</b></li>
-            </ol>
-        </article>
-
         <article class="card focus-member">
-            <div class="card-title"><div><p>NEXT MEMBER</p><h2>다음 회원</h2></div></div>
-            <div class="member-head"><span>김</span><div><h3>김지훈</h3><p>남 · 31세 · 목표: 근력 향상</p></div></div>
-            <dl><div><dt>현재 회원권</dt><dd>PT 10회 · 5회 남음</dd></div><div><dt>최근 운동</dt><dd>7월 28일 · 상체 루틴</dd></div><div><dt>주의사항</dt><dd>왼쪽 무릎 부담 주의</dd></div></dl>
-            <a href="#">회원 상세 보기</a>
+            <div class="card-title"><div><p>RECENT ACTIVITY</p><h2>가장 최근에 운동한 회원</h2></div></div>
+            <div th:if="${!#lists.isEmpty(members)}" th:with="member=${members[0]}">
+                <div class="member-head"><span th:text="${#strings.substring(member.memberName, 0, 1)}">김</span><div><h3 th:text="${member.memberName}">김지훈</h3><p th:text="${member.routineTitle}">하체 근력 루틴</p></div></div>
+                <dl><div><dt>최근 운동 기록</dt><dd th:text="${member.lastWorkoutAt == null ? '운동 기록이 없습니다.' : #temporals.format(member.lastWorkoutAt, 'yyyy.MM.dd HH:mm')}">2026.08.14 10:00</dd></div><div><dt>활성 루틴</dt><dd th:text="${member.routineTitle}">하체 근력 루틴</dd></div></dl>
+            </div>
+            <p th:if="${#lists.isEmpty(members)}">현재 배정된 회원이 없습니다.</p>
         </article>
-
         <article class="card members">
-            <div class="card-title"><div><p>MEMBERS</p><h2>담당 회원 운동 현황</h2></div><a href="#">전체 회원</a></div>
-            <div class="member-row"><span class="avatar mint">이</span><div><strong>이서연</strong><small>체형 교정 루틴 · 4/5일 수행</small></div><progress value="80" max="100">80%</progress><b>80%</b></div>
-            <div class="member-row"><span class="avatar blue">박</span><div><strong>박서준</strong><small>벌크업 루틴 · 5/5일 수행</small></div><progress value="100" max="100">100%</progress><b>100%</b></div>
-            <div class="member-row"><span class="avatar yellow">정</span><div><strong>정현우</strong><small>전신 루틴 · 2/5일 수행</small></div><progress value="40" max="100">40%</progress><b>40%</b></div>
-        </article>
-
-        <article class="card feedback">
-            <div class="card-title"><div><p>FEEDBACK</p><h2>확인이 필요한 기록</h2></div></div>
-            <a href="#"><span>김지훈</span><div><strong>스쿼트 60kg · 4세트</strong><small>오늘 09:45 기록</small></div><b>확인</b></a>
-            <a href="#"><span>이서연</span><div><strong>케이블 로우 · 자세 질문</strong><small>어제 20:12 기록</small></div><b>답변</b></a>
+            <div class="card-title"><div><p>MEMBERS</p><h2>담당 회원 운동 현황</h2></div></div>
+            <div class="member-row" th:each="member : ${members}">
+                <span class="avatar mint" th:text="${#strings.substring(member.memberName, 0, 1)}">회</span>
+                <div><strong th:text="${member.memberName}">회원 이름</strong><small th:text="${member.routineTitle}">활성 루틴 없음</small></div>
+                <small th:text="${member.lastWorkoutAt == null ? '운동 기록 없음' : #temporals.format(member.lastWorkoutAt, 'yyyy.MM.dd HH:mm')}">2026.08.14 10:00</small>
+            </div>
+            <p th:if="${#lists.isEmpty(members)}">현재 배정된 회원이 없습니다.</p>
         </article>
     </section>
 </main>

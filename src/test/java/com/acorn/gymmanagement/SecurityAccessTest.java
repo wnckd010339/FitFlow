@@ -10,6 +10,8 @@ import com.acorn.gymmanagement.member.service.MemberService;
 import com.acorn.gymmanagement.member.view.MemberHomeView;
 import com.acorn.gymmanagement.mypage.service.MemberPortalService;
 import com.acorn.gymmanagement.mypage.dto.response.MemberProfileView;
+import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeProfileResponse;
+import com.acorn.gymmanagement.trainer.service.TrainerService;
 import com.acorn.gymmanagement.member.model.MemberGender;
 import com.acorn.gymmanagement.security.SessionUser;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +58,9 @@ class SecurityAccessTest {
     @MockitoBean
     private MemberPortalService memberPortalService;
 
+    @MockitoBean
+    private TrainerService trainerService;
+
     @BeforeEach
     void setUpDashboard() {
         DashboardSummaryResponse summary = new DashboardSummaryResponse(
@@ -78,6 +83,10 @@ class SecurityAccessTest {
                 LocalDate.of(1990, 1, 1), MemberGender.MALE,
                 "tester@fitflow.com", "ACTIVE", 10, 3, 5
         ));
+        when(trainerService.getHomeProfile(1L)).thenReturn(new TrainerHomeProfileResponse(
+                "테스트 트레이너", "근력 운동", 0, 0, 0, 0
+        ));
+        when(trainerService.findHomeMembers(1L)).thenReturn(List.of());
     }
 
     @Test

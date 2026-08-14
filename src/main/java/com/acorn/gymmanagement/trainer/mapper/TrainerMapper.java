@@ -5,6 +5,8 @@ import com.acorn.gymmanagement.trainer.dto.response.TrainerListResponse;
 import com.acorn.gymmanagement.trainer.dto.response.TrainerSummaryResponse;
 import com.acorn.gymmanagement.trainer.dto.response.WaitingMemberResponse;
 import com.acorn.gymmanagement.trainer.dto.response.AssignedMemberResponse;
+import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeMemberResponse;
+import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeProfileResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import com.acorn.gymmanagement.trainer.model.TrainerAssignmentRegistration;
@@ -23,4 +25,6 @@ public interface TrainerMapper {
     boolean existsActiveAssignment(Long memberId);
     int insertAssignment(TrainerAssignmentRegistration registration);
     int endActiveAssignment(@Param("memberId") Long memberId, @Param("endedAt") java.time.LocalDate endedAt);
+    TrainerHomeProfileResponse findHomeProfile(@Param("userId") Long userId);
+    List<TrainerHomeMemberResponse> findHomeMembers(@Param("userId") Long userId);
 }

@@ -65,4 +65,35 @@
         UPDATE trainer_assignments SET status = 'ENDED', ended_at = #{endedAt}
         WHERE member_id = #{memberId} AND status = 'ACTIVE'
     </update>
+    <select id="findHomeProfile" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerHomeProfileResponse">
+        SELECT t.name,
+               COALESCE(t.specialty, '전문 분야 미등록') AS specialty,
+               COUNT(DISTINCT ta.member_id) AS assigned_member_count,
+               COUNT(DISTINCT CASE WHEN wr.status = 'ACTIVE' THEN wr.id END) AS active_routine_count,
+               COUNT(DISTINCT CASE WHEN ws.started_at &gt;= DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY) THEN ws.id END) AS weekly_workout_count,
+               COUNT(DISTINCT CASE WHEN ws.started_at &gt;= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 7 DAY) THEN ws.member_id END) AS members_with_recent_workout_count
+        FROM trainers t
+        LEFT JOIN trainer_assignments ta ON ta.trainer_id = t.id AND ta.status = 'ACTIVE'
+        LEFT JOIN workout_routines wr ON wr.member_id = ta.member_id AND wr.trainer_id = t.id
+        LEFT JOIN workout_sessions ws ON ws.member_id = ta.member_id
+        WHERE t.user_id = #{userId} AND t.status = 'ACTIVE'
+        GROUP BY t.id, t.name, t.specialty
+    </select>
+    <select id="findHomeMembers" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerHomeMemberResponse">
+        SELECT m.id AS member_id,
+               m.name AS member_name,
+               COALESCE((
+                   SELECT wr.title FROM workout_routines wr
+                   WHERE wr.member_id = m.id AND wr.trainer_id = t.id AND wr.status = 'ACTIVE'
+                   ORDER BY wr.start_date DESC, wr.id DESC LIMIT 1
+               ), '활성 루틴 없음') AS routine_title,
+               MAX(ws.started_at) AS last_workout_at
+        FROM trainers t
+        JOIN trainer_assignments ta ON ta.trainer_id = t.id AND ta.status = 'ACTIVE'
+        JOIN members m ON m.id = ta.member_id AND m.status = 'ACTIVE'
+        LEFT JOIN workout_sessions ws ON ws.member_id = m.id
+        WHERE t.user_id = #{userId} AND t.status = 'ACTIVE'
+        GROUP BY m.id, m.name, t.id
+        ORDER BY last_workout_at DESC, m.name
+    </select>
 </mapper>
