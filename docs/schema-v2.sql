@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS equipment;
 DROP TABLE IF EXISTS workout_sets;
 DROP TABLE IF EXISTS workout_sessions;
 DROP TABLE IF EXISTS routine_exercises;
+DROP TABLE IF EXISTS routine_workout_groups;
 DROP TABLE IF EXISTS workout_routines;
 DROP TABLE IF EXISTS attendances;
 DROP TABLE IF EXISTS refunds;
@@ -218,9 +219,28 @@ CREATE TABLE workout_routines (
     INDEX ix_routine_trainer_status (trainer_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE routine_workout_groups (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    routine_id BIGINT NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    week_number INT NULL,
+    day_of_week TINYINT NULL,
+    display_order INT NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_workout_group_routine FOREIGN KEY (routine_id) REFERENCES workout_routines (id),
+    CONSTRAINT ck_workout_group_week CHECK (week_number IS NULL OR week_number > 0),
+    CONSTRAINT ck_workout_group_day CHECK (day_of_week IS NULL OR day_of_week BETWEEN 1 AND 7),
+    CONSTRAINT ck_workout_group_order CHECK (display_order > 0),
+    CONSTRAINT uk_workout_group_order UNIQUE (routine_id, display_order),
+    CONSTRAINT uk_workout_group_routine_pair UNIQUE (id, routine_id),
+    INDEX ix_workout_group_routine (routine_id, week_number, day_of_week)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE routine_exercises (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     routine_id BIGINT NOT NULL,
+    workout_group_id BIGINT NULL,
     exercise_name VARCHAR(150) NOT NULL,
     day_of_week TINYINT NULL,
     display_order INT NOT NULL DEFAULT 1,
@@ -231,13 +251,16 @@ CREATE TABLE routine_exercises (
     rest_seconds INT NULL,
     memo VARCHAR(500) NULL,
     CONSTRAINT fk_routine_exercise_routine FOREIGN KEY (routine_id) REFERENCES workout_routines (id),
+    CONSTRAINT fk_routine_exercise_group FOREIGN KEY (workout_group_id, routine_id)
+        REFERENCES routine_workout_groups (id, routine_id),
     CONSTRAINT ck_exercise_day CHECK (day_of_week IS NULL OR day_of_week BETWEEN 1 AND 7),
     CONSTRAINT ck_exercise_order CHECK (display_order > 0),
     CONSTRAINT ck_exercise_sets CHECK (target_sets > 0),
     CONSTRAINT ck_exercise_reps CHECK (
         target_reps_min IS NULL OR target_reps_max IS NULL OR target_reps_max >= target_reps_min
     ),
-    INDEX ix_routine_exercise_order (routine_id, day_of_week, display_order)
+    INDEX ix_routine_exercise_order (routine_id, day_of_week, display_order),
+    INDEX ix_routine_exercise_group_order (workout_group_id, display_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE workout_sessions (

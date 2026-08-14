@@ -22,13 +22,49 @@
   JOIN trainer_assignments ta ON ta.member_id=m.id AND ta.status='ACTIVE' JOIN trainers t ON t.id=ta.trainer_id AND t.user_id=#{userId} WHERE (#{memberId} IS NULL OR m.id=#{memberId}) GROUP BY ws.id,m.id,m.name,wr.title,ws.started_at,ws.ended_at,ws.memo ORDER BY ws.started_at DESC
  </select>
  <select id="findRoutines" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerRoutineView">
-  SELECT wr.id routine_id,m.id member_id,m.name member_name,wr.title,wr.description,wr.start_date,wr.end_date,re.exercise_name,re.target_sets,re.target_reps_min,re.target_reps_max,re.target_weight,re.rest_seconds,re.day_of_week FROM workout_routines wr JOIN trainers t ON t.id=wr.trainer_id AND t.user_id=#{userId} JOIN members m ON m.id=wr.member_id LEFT JOIN routine_exercises re ON re.routine_id=wr.id WHERE (#{memberId} IS NULL OR m.id=#{memberId}) ORDER BY wr.updated_at DESC,re.display_order
+  SELECT wr.id AS routine_id,m.id AS member_id,m.name AS member_name,wr.title,wr.description,
+         wr.start_date,wr.end_date,rwg.id AS workout_group_id,
+         COALESCE(rwg.title,wr.title) AS workout_group_title,rwg.week_number,rwg.day_of_week,
+         CASE WHEN rwg.id IS NULL
+              THEN (SELECT COUNT(*) FROM routine_exercises re0 WHERE re0.routine_id=wr.id AND re0.workout_group_id IS NULL)
+              ELSE (SELECT COUNT(*) FROM routine_exercises re1 WHERE re1.workout_group_id=rwg.id)
+         END AS exercise_count
+  FROM workout_routines wr
+  JOIN trainers t ON t.id=wr.trainer_id AND t.user_id=#{userId}
+  JOIN members m ON m.id=wr.member_id
+  LEFT JOIN routine_workout_groups rwg ON rwg.routine_id=wr.id
+  WHERE (#{memberId} IS NULL OR m.id=#{memberId})
+  ORDER BY wr.updated_at DESC,rwg.display_order
  </select>
- <select id="findRoutine" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerRoutineView">SELECT wr.id routine_id,m.id member_id,m.name member_name,wr.title,wr.description,wr.start_date,wr.end_date,re.exercise_name,re.target_sets,re.target_reps_min,re.target_reps_max,re.target_weight,re.rest_seconds,re.day_of_week FROM workout_routines wr JOIN trainers t ON t.id=wr.trainer_id AND t.user_id=#{userId} JOIN members m ON m.id=wr.member_id LEFT JOIN routine_exercises re ON re.routine_id=wr.id WHERE wr.id=#{routineId} ORDER BY re.display_order LIMIT 1</select>
+ <select id="findRoutine" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerRoutineView">
+  SELECT wr.id AS routine_id,m.id AS member_id,m.name AS member_name,wr.title,wr.description,
+         wr.start_date,wr.end_date,rwg.id AS workout_group_id,
+         COALESCE(rwg.title,wr.title) AS workout_group_title,rwg.week_number,rwg.day_of_week,
+         CASE WHEN rwg.id IS NULL
+              THEN (SELECT COUNT(*) FROM routine_exercises re0 WHERE re0.routine_id=wr.id AND re0.workout_group_id IS NULL)
+              ELSE (SELECT COUNT(*) FROM routine_exercises re1 WHERE re1.workout_group_id=rwg.id)
+         END AS exercise_count
+  FROM workout_routines wr
+  JOIN trainers t ON t.id=wr.trainer_id AND t.user_id=#{userId}
+  JOIN members m ON m.id=wr.member_id
+  LEFT JOIN routine_workout_groups rwg ON rwg.routine_id=wr.id
+  WHERE wr.id=#{routineId}
+  ORDER BY rwg.display_order LIMIT 1
+ </select>
+ <select id="findRoutineExercises" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerRoutineExerciseView">
+  SELECT id AS exercise_id,exercise_name,display_order,target_sets,target_reps_min,target_reps_max,
+         target_weight,rest_seconds,memo
+  FROM routine_exercises
+  WHERE routine_id=#{routineId}
+    AND ((#{workoutGroupId} IS NULL AND workout_group_id IS NULL) OR workout_group_id=#{workoutGroupId})
+  ORDER BY display_order,id
+ </select>
  <insert id="insertRoutine" useGeneratedKeys="true" keyProperty="routineId" keyColumn="id">INSERT INTO workout_routines(member_id,trainer_id,title,description,status,start_date,end_date) VALUES(#{memberId},#{trainerId},#{title},#{description},'ACTIVE',#{startDate},#{endDate})</insert>
  <update id="updateRoutine">UPDATE workout_routines SET title=#{title},description=#{description},start_date=#{startDate},end_date=#{endDate},updated_at=CURRENT_TIMESTAMP WHERE id=#{routineId} AND trainer_id=#{trainerId}</update>
+ <insert id="insertWorkoutGroup" useGeneratedKeys="true" keyProperty="workoutGroupId" keyColumn="id">INSERT INTO routine_workout_groups(routine_id,title,week_number,day_of_week,display_order) VALUES(#{routineId},#{title},#{weekNumber},#{dayOfWeek},#{displayOrder})</insert>
+ <update id="updateWorkoutGroup">UPDATE routine_workout_groups SET title=#{title},week_number=#{weekNumber},day_of_week=#{dayOfWeek},display_order=#{displayOrder},updated_at=CURRENT_TIMESTAMP WHERE id=#{workoutGroupId} AND routine_id=#{routineId}</update>
  <delete id="deleteRoutineExercises">DELETE FROM routine_exercises WHERE routine_id=#{routineId}</delete>
- <insert id="insertRoutineExercise">INSERT INTO routine_exercises(routine_id,exercise_name,day_of_week,display_order,target_sets,target_reps_min,target_reps_max,target_weight,rest_seconds) VALUES(#{routineId},#{exerciseName},#{dayOfWeek},1,#{targetSets},#{targetRepsMin},#{targetRepsMax},#{targetWeight},#{restSeconds})</insert>
+ <insert id="insertRoutineExercise">INSERT INTO routine_exercises(routine_id,workout_group_id,exercise_name,display_order,target_sets,target_reps_min,target_reps_max,target_weight,rest_seconds,memo) VALUES(#{routineId},#{workoutGroupId},#{exerciseName},#{displayOrder},#{targetSets},#{targetRepsMin},#{targetRepsMax},#{targetWeight},#{restSeconds},#{memo})</insert>
  <select id="findWorkout" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerWorkoutView">SELECT ws.id session_id,m.id member_id,m.name member_name,COALESCE(wr.title,'개인 운동') routine_title,ws.started_at,ws.ended_at,MAX(wset.exercise_name) exercise_name,COUNT(wset.id) sets,ws.memo FROM workout_sessions ws JOIN members m ON m.id=ws.member_id LEFT JOIN workout_routines wr ON wr.id=ws.routine_id LEFT JOIN workout_sets wset ON wset.session_id=ws.id JOIN trainer_assignments ta ON ta.member_id=m.id AND ta.status='ACTIVE' JOIN trainers t ON t.id=ta.trainer_id AND t.user_id=#{userId} WHERE ws.id=#{sessionId} GROUP BY ws.id,m.id,m.name,wr.title,ws.started_at,ws.ended_at,ws.memo</select>
  <insert id="insertWorkoutSession" useGeneratedKeys="true" keyProperty="sessionId" keyColumn="id">INSERT INTO workout_sessions(member_id,routine_id,started_at,ended_at,memo) VALUES(#{memberId},#{routineId},#{startedAt},#{endedAt},#{memo})</insert>
  <update id="updateWorkoutSession">UPDATE workout_sessions SET routine_id=#{routineId},started_at=#{startedAt},ended_at=#{endedAt},memo=#{memo},updated_at=CURRENT_TIMESTAMP WHERE id=#{sessionId} AND member_id=#{memberId}</update>

@@ -82,14 +82,20 @@ INSERT INTO workout_routines (
     (1, 1, 1, '4주 근력 향상 프로그램', '주 4회 상·하체 분할 루틴', 'ACTIVE', '2026-07-20', '2026-08-16'),
     (2, 3, NULL, '개인 전신 운동', '트레이너 없이 회원이 수행하는 개인 루틴', 'ACTIVE', '2026-07-15', NULL);
 
+INSERT INTO routine_workout_groups (
+    id, routine_id, title, week_number, day_of_week, display_order
+) VALUES
+    (1, 1, '1주차 하체', 1, 1, 1),
+    (2, 2, '개인 전신 운동', NULL, 6, 1);
+
 INSERT INTO routine_exercises (
-    id, routine_id, exercise_name, day_of_week, display_order,
+    id, routine_id, workout_group_id, exercise_name, day_of_week, display_order,
     target_sets, target_reps_min, target_reps_max, target_weight, rest_seconds, memo
 ) VALUES
-    (1, 1, '백 스쿼트', 1, 1, 4, 8, 10, 60.00, 90, '무릎과 발끝 방향 유지'),
-    (2, 1, '레그 프레스', 1, 2, 4, 10, 12, 100.00, 90, NULL),
-    (3, 1, '루마니안 데드리프트', 1, 3, 3, 10, 10, 50.00, 90, '허리 중립 유지'),
-    (4, 2, '고블릿 스쿼트', 6, 1, 3, 12, 15, 20.00, 60, NULL);
+    (1, 1, 1, '백 스쿼트', 1, 1, 4, 8, 10, 60.00, 90, '무릎과 발끝 방향 유지'),
+    (2, 1, 1, '레그 프레스', 1, 2, 4, 10, 12, 100.00, 90, NULL),
+    (3, 1, 1, '루마니안 데드리프트', 1, 3, 3, 10, 10, 50.00, 90, '허리 중립 유지'),
+    (4, 2, 2, '고블릿 스쿼트', 6, 1, 3, 12, 15, 20.00, 60, NULL);
 
 INSERT INTO workout_sessions (
     id, member_id, routine_id, started_at, ended_at, memo

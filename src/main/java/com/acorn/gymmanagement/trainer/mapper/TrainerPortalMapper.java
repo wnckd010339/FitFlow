@@ -4,6 +4,7 @@ import com.acorn.gymmanagement.trainer.dto.response.*;
 import com.acorn.gymmanagement.trainer.form.TrainerProfileForm;
 import com.acorn.gymmanagement.trainer.model.TrainerRoutineExerciseRegistration;
 import com.acorn.gymmanagement.trainer.model.TrainerRoutineRegistration;
+import com.acorn.gymmanagement.trainer.model.TrainerRoutineWorkoutGroupRegistration;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
@@ -21,8 +22,12 @@ public interface TrainerPortalMapper {
     List<TrainerWorkoutView> findWorkouts(@Param("userId") Long userId, @Param("memberId") Long memberId);
     List<TrainerRoutineView> findRoutines(@Param("userId") Long userId, @Param("memberId") Long memberId);
     Optional<TrainerRoutineView> findRoutine(@Param("userId") Long userId, @Param("routineId") Long routineId);
+    List<TrainerRoutineExerciseView> findRoutineExercises(@Param("routineId") Long routineId,
+                                                          @Param("workoutGroupId") Long workoutGroupId);
     int insertRoutine(TrainerRoutineRegistration registration);
     int updateRoutine(TrainerRoutineRegistration registration);
+    int insertWorkoutGroup(TrainerRoutineWorkoutGroupRegistration registration);
+    int updateWorkoutGroup(TrainerRoutineWorkoutGroupRegistration registration);
     int deleteRoutineExercises(@Param("routineId") Long routineId);
     int insertRoutineExercise(TrainerRoutineExerciseRegistration registration);
     Optional<TrainerWorkoutView> findWorkout(@Param("userId") Long userId, @Param("sessionId") Long sessionId);

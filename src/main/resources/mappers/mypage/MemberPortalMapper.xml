@@ -14,8 +14,8 @@
         WHERE m.user_id=#{userId} ORDER BY a.checked_in_at DESC LIMIT 30
     </select>
     <select id="findActiveRoutine" resultType="com.acorn.gymmanagement.mypage.dto.response.MemberRoutineView">
-        SELECT wr.id AS routine_id, wr.title, wr.description, wr.start_date, wr.end_date, re.exercise_name, re.target_sets, re.target_reps_min, re.target_reps_max, re.target_weight, re.day_of_week, re.display_order
-        FROM members m JOIN workout_routines wr ON wr.member_id=m.id LEFT JOIN routine_exercises re ON re.routine_id=wr.id
+        SELECT wr.id AS routine_id, wr.title, wr.description, wr.start_date, wr.end_date, re.exercise_name, re.target_sets, re.target_reps_min, re.target_reps_max, re.target_weight, COALESCE(rwg.day_of_week,re.day_of_week) AS day_of_week, re.display_order
+        FROM members m JOIN workout_routines wr ON wr.member_id=m.id LEFT JOIN routine_exercises re ON re.routine_id=wr.id LEFT JOIN routine_workout_groups rwg ON rwg.id=re.workout_group_id
         WHERE m.user_id=#{userId} AND wr.status='ACTIVE' AND wr.start_date &lt;= CURRENT_DATE AND (wr.end_date IS NULL OR wr.end_date &gt;= CURRENT_DATE)
         ORDER BY wr.start_date DESC, wr.id DESC, re.display_order, re.id
     </select>
