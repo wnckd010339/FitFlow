@@ -46,6 +46,24 @@
         </constructor>
     </resultMap>
 
+    <resultMap id="ExpiredPaymentOrderTargetResultMap"
+               type="com.acorn.gymmanagement.payment.model.ExpiredPaymentOrderTarget">
+        <constructor>
+            <idArg name="paymentOrderId"
+                   column="payment_order_id"
+                   javaType="java.lang.Long"/>
+            <arg name="memberId"
+                 column="member_id"
+                 javaType="java.lang.Long"/>
+            <arg name="membershipId"
+                 column="membership_id"
+                 javaType="java.lang.Long"/>
+            <arg name="membershipStatus"
+                 column="membership_status"
+                 javaType="com.acorn.gymmanagement.membership.model.MembershipStatus"/>
+        </constructor>
+    </resultMap>
+
     <insert id="insert"
             parameterType="com.acorn.gymmanagement.payment.model.PaymentOrderRegistration"
             useGeneratedKeys="true"
@@ -95,6 +113,44 @@
         FOR UPDATE
     </select>
 
+    <select id="findExpiredReadyOrdersForUpdate"
+            resultMap="ExpiredPaymentOrderTargetResultMap">
+        SELECT
+            po.id AS payment_order_id,
+            po.member_id,
+            po.member_membership_id AS membership_id,
+            mm.status AS membership_status
+        FROM payment_orders po
+        JOIN member_memberships mm
+            ON mm.id = po.member_membership_id
+        WHERE po.status = 'READY'
+            AND po.expires_at &lt; #{now}
+            AND mm.status IN ('PENDING_PAYMENT', 'CANCELLED')
+        ORDER BY po.id
+        LIMIT #{limit}
+        FOR UPDATE
+    </select>
+
+    <select id="findExpiredReadyOrdersByUserIdForUpdate"
+            resultMap="ExpiredPaymentOrderTargetResultMap">
+        SELECT
+            po.id AS payment_order_id,
+            po.member_id,
+            po.member_membership_id AS membership_id,
+            mm.status AS membership_status
+        FROM payment_orders po
+        JOIN members m
+            ON m.id = po.member_id
+        JOIN member_memberships mm
+            ON mm.id = po.member_membership_id
+        WHERE m.user_id = #{userId}
+            AND po.status = 'READY'
+            AND po.expires_at &lt; #{now}
+            AND mm.status IN ('PENDING_PAYMENT', 'CANCELLED')
+        ORDER BY po.id
+        FOR UPDATE
+    </select>
+
     <update id="markApproving">
         UPDATE payment_orders
         SET status = 'APPROVING',
@@ -127,12 +183,12 @@
             AND status = 'APPROVING'
     </update>
 
-    <update id="expireReadyOrders">
+    <update id="markExpired">
         UPDATE payment_orders
         SET status = 'EXPIRED',
-        updated_at = CURRENT_TIMESTAMP
-        WHERE status = 'READY'
-        AND expires_at &lt; #{now}
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{paymentOrderId}
+            AND status = 'READY'
     </update>
 
 </mapper>

@@ -1,0 +1,113 @@
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector("#membership-order-form");
+    if (!form) return;
+
+    const productSelect = document.querySelector("#membership-product");
+    const startDateInput = document.querySelector("#membership-start-date");
+    const summary = document.querySelector("#membership-order-summary");
+    const message = document.querySelector("#membership-order-message");
+    const submitButton = document.querySelector("#membership-order-submit");
+    const result = document.querySelector("#membership-order-result");
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+    let countdownTimer;
+
+    const now = new Date();
+    const localToday = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    startDateInput.min = localToday;
+    if (!startDateInput.value) startDateInput.value = localToday;
+
+    const formatPrice = (value) => `${Number(value).toLocaleString("ko-KR")}원`;
+    const selectedProduct = () => {
+        const option = productSelect.options[productSelect.selectedIndex];
+        return option?.value ? option : null;
+    };
+
+    function updateSummary() {
+        const option = selectedProduct();
+        summary.hidden = !option;
+        if (!option) return;
+        summary.querySelector("[data-order-name]").textContent = option.dataset.name;
+        summary.querySelector("[data-order-duration]").textContent = `${option.dataset.duration}일 · ${option.dataset.type}`;
+        summary.querySelector("[data-order-price]").textContent = formatPrice(option.dataset.price);
+    }
+
+    function showMessage(text, type = "") {
+        message.textContent = text;
+        message.className = `order-message ${type}`.trim();
+    }
+
+    function startCountdown(expiresAt) {
+        const expiresAtMillis = new Date(expiresAt).getTime();
+        const countdown = result.querySelector("[data-result-countdown]");
+        const resultStatus = result.querySelector("[data-result-status]");
+
+        clearInterval(countdownTimer);
+        result.classList.remove("expired");
+
+        const updateCountdown = () => {
+            const remainingSeconds = Math.max(
+                0,
+                Math.ceil((expiresAtMillis - Date.now()) / 1000)
+            );
+            const minutes = String(Math.floor(remainingSeconds / 60)).padStart(2, "0");
+            const seconds = String(remainingSeconds % 60).padStart(2, "0");
+            countdown.textContent = `${minutes}:${seconds}`;
+
+            if (remainingSeconds > 0) return;
+
+            clearInterval(countdownTimer);
+            countdown.textContent = "만료됨";
+            resultStatus.textContent = "결제 주문의 유효시간이 만료되었습니다.";
+            result.classList.add("expired");
+            form.hidden = false;
+            submitButton.disabled = false;
+            showMessage("동일한 상품을 다시 주문할 수 있습니다.", "error");
+        };
+
+        updateCountdown();
+        countdownTimer = setInterval(updateCountdown, 1000);
+    }
+
+    productSelect.addEventListener("change", updateSummary);
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const option = selectedProduct();
+        if (!option || !startDateInput.value) {
+            showMessage("회원권 상품과 이용 시작일을 확인해 주세요.", "error");
+            return;
+        }
+        if (!csrfToken || !csrfHeader) {
+            showMessage("보안 토큰을 확인할 수 없습니다. 페이지를 새로고침해 주세요.", "error");
+            return;
+        }
+
+        submitButton.disabled = true;
+        showMessage("결제 주문을 생성하고 있습니다.");
+        try {
+            const response = await fetch("/api/member/payment-orders", {
+                method: "POST",
+                headers: {"Content-Type": "application/json", [csrfHeader]: csrfToken},
+                body: JSON.stringify({productId: Number(option.value), startDate: startDateInput.value})
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || payload.error?.detail || "결제 주문을 생성하지 못했습니다.");
+            }
+
+            const order = payload.data;
+            result.querySelector("[data-result-order-id]").textContent = order.orderId;
+            result.querySelector("[data-result-order-name]").textContent = order.orderName;
+            result.querySelector("[data-result-amount]").textContent = formatPrice(order.amount);
+            result.querySelector("[data-result-expires-at]").textContent = new Date(order.expiresAt).toLocaleString("ko-KR");
+            result.hidden = false;
+            form.hidden = true;
+            startCountdown(order.expiresAt);
+        } catch (error) {
+            showMessage(error.message, "error");
+            submitButton.disabled = false;
+        }
+    });
+    window.addEventListener("pagehide", () => clearInterval(countdownTimer));
+    updateSummary();
+});

@@ -211,4 +211,13 @@
           AND member_id = #{memberId}
           AND status IN ('ACTIVE', 'PAUSED')
     </update>
+
+    <update id="cancelPendingMembership">
+        UPDATE member_memberships
+        SET status = 'CANCELLED',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{membershipId}
+            AND member_id = #{memberId}
+            AND status = 'PENDING_PAYMENT'
+    </update>
 </mapper>

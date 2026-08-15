@@ -1,5 +1,6 @@
 package com.acorn.gymmanagement.mypage.controller;
 
+import com.acorn.gymmanagement.membership.service.MembershipService;
 import com.acorn.gymmanagement.mypage.form.WorkoutRecordForm;
 import com.acorn.gymmanagement.mypage.form.MemberProfileForm;
 import com.acorn.gymmanagement.mypage.service.MemberPortalService;
@@ -17,10 +18,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class MemberPortalController {
     private final MemberPortalService memberPortalService;
+    private final MembershipService membershipService;
 
     @GetMapping("/memberships")
     public String memberships(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser user, Model model) {
         model.addAttribute("memberships", memberPortalService.memberships(user.userId()));
+        model.addAttribute("membershipProducts", membershipService.findActiveProducts());
         return "member/memberships";
     }
 

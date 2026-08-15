@@ -29,12 +29,18 @@ public class MemberPaymentOrderService {
 
     private final MembershipService membershipService;
     private final PaymentOrderMapper paymentOrderMapper;
+    private final PaymentOrderExpirationService paymentOrderExpirationService;
 
     @Transactional
     public PaymentOrderResponse create(
             Long userId,
             CreateMemberPaymentOrderRequest request
     ){
+        paymentOrderExpirationService.expireForMember(
+                userId,
+                LocalDateTime.now()
+        );
+
         PendingMembershipPaymentTarget target =
                 membershipService.createPendingForMember(
                         userId,

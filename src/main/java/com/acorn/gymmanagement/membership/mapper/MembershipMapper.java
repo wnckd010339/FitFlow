@@ -62,5 +62,10 @@ public interface MembershipMapper {
             @Param("membershipId") Long membershipId
     );
 
+    int cancelPendingMembership(
+            @Param("memberId") Long memberId,
+            @Param("membershipId") Long membershipId
+    );
+
 
 }

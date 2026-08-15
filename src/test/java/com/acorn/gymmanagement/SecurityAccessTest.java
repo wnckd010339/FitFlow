@@ -8,6 +8,7 @@ import com.acorn.gymmanagement.member.dto.response.MemberHomeSummaryResponse;
 import com.acorn.gymmanagement.member.dto.request.CreateMemberRequest;
 import com.acorn.gymmanagement.member.service.MemberService;
 import com.acorn.gymmanagement.member.view.MemberHomeView;
+import com.acorn.gymmanagement.membership.service.MembershipService;
 import com.acorn.gymmanagement.mypage.service.MemberPortalService;
 import com.acorn.gymmanagement.mypage.dto.response.MemberProfileView;
 import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeProfileResponse;
@@ -59,6 +60,9 @@ class SecurityAccessTest {
     private MemberPortalService memberPortalService;
 
     @MockitoBean
+    private MembershipService membershipService;
+
+    @MockitoBean
     private TrainerService trainerService;
 
     @BeforeEach
@@ -83,6 +87,7 @@ class SecurityAccessTest {
                 LocalDate.of(1990, 1, 1), MemberGender.MALE,
                 "tester@fitflow.com", "ACTIVE", 10, 3, 5
         ));
+        when(membershipService.findActiveProducts()).thenReturn(List.of());
         when(trainerService.getHomeProfile(1L)).thenReturn(new TrainerHomeProfileResponse(
                 "테스트 트레이너", "근력 운동", 0, 0, 0, 0
         ));

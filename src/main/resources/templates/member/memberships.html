@@ -1,3 +1,86 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>내 회원권 | FitFlow</title><link rel="stylesheet" th:href="@{/css/screens/member-portal.css}"></head>
-<body><header th:replace="~{member/portal-fragments :: header('memberships')}"></header><main class="portal-main"><p class="eyebrow">MEMBERSHIP</p><h1>내 회원권</h1><p class="subtitle">현재 이용권과 이전 이용 이력을 확인하세요.</p><section class="card-grid"><article class="portal-card membership" th:each="membership : ${memberships}"><div class="card-top"><span th:text="${membership.productType}">GYM</span><b th:text="${membership.status}">ACTIVE</b></div><h2 th:text="${membership.productName}">3개월 자유 이용권</h2><p th:text="|${#temporals.format(membership.startDate, 'yyyy.MM.dd')} ~ ${#temporals.format(membership.endDate, 'yyyy.MM.dd')}|">기간</p><strong th:if="${membership.remainingDays != null}" th:text="|D-${membership.remainingDays}|">D-12</strong><small th:if="${membership.remainingPtSessions > 0}" th:text="|잔여 PT ${membership.remainingPtSessions}회|">잔여 PT</small></article><p class="empty" th:if="${#lists.isEmpty(memberships)}">등록된 회원권이 없습니다. 센터에 문의해 주세요.</p></section></main></body></html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>내 회원권 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/screens/member-portal.css}">
+    <link rel="stylesheet" th:href="@{/css/screens/member-membership-order.css(v=2)}">
+    <script defer th:src="@{/js/screens/member-membership-order.js}"></script>
+</head>
+<body>
+<header th:replace="~{member/portal-fragments :: header('memberships')}"></header>
+<main class="portal-main">
+    <p class="eyebrow">MEMBERSHIP</p>
+    <h1>내 회원권</h1>
+    <p class="subtitle">현재 이용권을 확인하고 새로운 회원권 결제 주문을 만들 수 있습니다.</p>
+
+    <section class="portal-card membership-order-section" aria-labelledby="membership-order-title">
+        <div class="section-heading">
+            <div><p class="eyebrow">NEW MEMBERSHIP</p><h2 id="membership-order-title">회원권 구매 준비</h2></div>
+            <span class="order-step">1단계 · 주문 생성</span>
+        </div>
+        <form id="membership-order-form" class="membership-order-form">
+            <label>
+                <span>회원권 상품</span>
+                <select id="membership-product" name="productId" required>
+                    <option value="">상품을 선택해 주세요</option>
+                    <option th:each="product : ${membershipProducts}"
+                            th:value="${product.productId}"
+                            th:text="|${product.name} · ${#numbers.formatInteger(product.price, 0, 'COMMA')}원|"
+                            th:attr="data-name=${product.name},data-price=${product.price},data-duration=${product.durationDays},data-type=${product.productType}">
+                        30일 이용권 · 90,000원
+                    </option>
+                </select>
+            </label>
+            <label><span>이용 시작일</span><input id="membership-start-date" name="startDate" type="date" required></label>
+            <aside id="membership-order-summary" class="order-summary" hidden>
+                <div><span>선택 상품</span><strong data-order-name>-</strong></div>
+                <div><span>이용 기간</span><strong data-order-duration>-</strong></div>
+                <div><span>주문 금액</span><strong data-order-price>-</strong></div>
+            </aside>
+            <p class="order-guide">주문 생성 후 회원권은 결제 대기 상태로 등록됩니다. 현재 화면에서는 실제 결제가 진행되지 않습니다.</p>
+            <p id="membership-order-message" class="order-message" role="status" aria-live="polite"></p>
+            <button id="membership-order-submit" class="primary-action" type="submit"
+                    th:disabled="${#lists.isEmpty(membershipProducts)}">결제 주문 만들기</button>
+            <p class="empty" th:if="${#lists.isEmpty(membershipProducts)}">현재 구매 가능한 회원권 상품이 없습니다.</p>
+        </form>
+        <div id="membership-order-result" class="order-result" hidden>
+            <span data-result-status>결제 대기 주문이 생성되었습니다.</span>
+            <strong data-result-order-id></strong>
+            <p><b data-result-order-name></b> · <b data-result-amount></b></p>
+            <small>주문 유효시간: <time data-result-expires-at></time>까지</small>
+            <small class="order-countdown">남은 시간 <b data-result-countdown>10:00</b></small>
+            <a th:href="@{/member/memberships}">내 회원권 새로고침</a>
+        </div>
+    </section>
+
+    <section aria-labelledby="membership-history-title">
+        <h2 id="membership-history-title" class="section-title">보유 회원권</h2>
+        <div class="card-grid">
+            <article class="portal-card membership" th:each="membership : ${memberships}">
+                <div class="card-top">
+                    <span th:text="${membership.productType}">GYM</span>
+                    <b th:classappend="${'status-' + #strings.toLowerCase(membership.status)}"
+                       th:switch="${membership.status}">
+                        <span th:case="'PENDING_PAYMENT'">결제 대기</span>
+                        <span th:case="'ACTIVE'">이용 중</span>
+                        <span th:case="'PAUSED'">일시 정지</span>
+                        <span th:case="'EXPIRED'">기간 만료</span>
+                        <span th:case="'CANCELLED'">주문 취소</span>
+                        <span th:case="*" th:text="${membership.status}">상태</span>
+                    </b>
+                </div>
+                <h2 th:text="${membership.productName}">3개월 자유 이용권</h2>
+                <p th:text="|${#temporals.format(membership.startDate, 'yyyy.MM.dd')} ~ ${#temporals.format(membership.endDate, 'yyyy.MM.dd')}|">기간</p>
+                <strong th:if="${membership.remainingDays != null}" th:text="|D-${membership.remainingDays}|">D-12</strong>
+                <small th:if="${membership.remainingPtSessions > 0}" th:text="|잔여 PT ${membership.remainingPtSessions}회|">잔여 PT</small>
+            </article>
+            <p class="empty" th:if="${#lists.isEmpty(memberships)}">등록된 회원권이 없습니다.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>
