@@ -8,6 +8,7 @@ import com.acorn.gymmanagement.membership.mapper.MembershipMapper;
 import com.acorn.gymmanagement.membership.model.MemberMembershipRegistration;
 import com.acorn.gymmanagement.membership.model.MembershipProduct;
 import com.acorn.gymmanagement.membership.model.MembershipStatus;
+import com.acorn.gymmanagement.membership.model.PendingMembershipPaymentTarget;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -179,6 +180,62 @@ public class MembershipService {
         return new BusinessException(
                 ErrorCode.CONFLICT,
                 "회원권 상태를 " + current + "에서 " + target + "(으)로 변경할 수 없습니다."
+        );
+    }
+
+    @Transactional
+    public PendingMembershipPaymentTarget createPendingForMember(
+            Long userId,
+            Long productId,
+            LocalDate startDate
+    ) {
+        Long memberId = membershipMapper
+                .findActiveMemberIdByUserId(userId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "활성 회원 정보를 찾을 수 없습니다."
+                ));
+        MembershipProduct product = membershipMapper
+                .findActiveProductById(productId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "구매 가능한 회원권 상품을 찾을 수 없습니다."
+                ));
+
+        LocalDate endDate = startDate
+                .plusDays(product.durationDays() - 1L);
+
+        if(membershipMapper.existsOverlappingMembership(
+                memberId,
+                startDate,
+                endDate
+        )) {
+            throw new BusinessException(
+                    ErrorCode.CONFLICT,
+                    "해당 기간과 겹치는 회원권이 있습니다."
+            );
+        }
+
+        MemberMembershipRegistration registration =
+                new MemberMembershipRegistration(
+                        memberId,
+                        product.id(),
+                        startDate,
+                        endDate,
+                        product.ptSessionCount(),
+                        MembershipStatus.PENDING_PAYMENT
+                );
+
+        validateAffectedRows(
+                membershipMapper.insertMemberMembership(registration),
+                "결제 대기 회원권 생성에 실패했습니다."
+        );
+
+        return new PendingMembershipPaymentTarget(
+                memberId,
+                registration.getMembershipId(),
+                product.name(),
+                product.price()
         );
     }
 }

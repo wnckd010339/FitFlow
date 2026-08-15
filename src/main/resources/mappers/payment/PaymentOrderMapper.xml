@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.acorn.gymmanagement.payment.mapper.PaymentOrderMapper">
+
+    <resultMap id="PaymentOrderResultMap"
+               type="com.acorn.gymmanagement.payment.model.PaymentOrder">
+        <constructor>
+            <idArg name="id"
+                   column="id"
+                   javaType="java.lang.Long"/>
+            <arg name="orderId"
+                 column="order_id"
+                 javaType="java.lang.String"/>
+            <arg name="memberId"
+                 column="member_id"
+                 javaType="java.lang.Long"/>
+            <arg name="membershipId"
+                 column="membership_id"
+                 javaType="java.lang.Long"/>
+            <arg name="paymentId"
+                 column="payment_id"
+                 javaType="java.lang.Long"/>
+            <arg name="pgProvider"
+                 column="pg_provider"
+                 javaType="java.lang.String"/>
+            <arg name="amount"
+                 column="amount"
+                 javaType="java.math.BigDecimal"/>
+            <arg name="status"
+                 column="status"
+                 javaType="com.acorn.gymmanagement.payment.model.PaymentOrderStatus"/>
+            <arg name="paymentKey"
+                 column="payment_key"
+                 javaType="java.lang.String"/>
+            <arg name="idempotencyKey"
+                 column="idempotency_key"
+                 javaType="java.lang.String"/>
+            <arg name="expiresAt"
+                 column="expires_at"
+                 javaType="java.time.LocalDateTime"/>
+            <arg name="approvedAt"
+                 column="approved_at"
+                 javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <insert id="insert"
+            parameterType="com.acorn.gymmanagement.payment.model.PaymentOrderRegistration"
+            useGeneratedKeys="true"
+            keyProperty="id"
+            keyColumn="id">
+        INSERT INTO payment_orders (
+            order_id,
+            member_id,
+            member_membership_id,
+            pg_provider,
+            amount,
+            status,
+            idempotency_key,
+            expires_at
+        )
+        VALUES (
+            #{orderId},
+            #{memberId},
+            #{membershipId},
+            #{pgProvider},
+            #{amount},
+            #{status},
+            #{idempotencyKey},
+            #{expiresAt}
+        )
+    </insert>
+
+    <select id="findByOrderIdForUpdate"
+            resultMap="PaymentOrderResultMap">
+        SELECT
+            po.id,
+            po.order_id,
+            po.member_id,
+            po.member_membership_id AS membership_id,
+            po.payment_id,
+            po.pg_provider,
+            po.amount,
+            po.status,
+            po.payment_key,
+            po.idempotency_key,
+            po.expires_at,
+            po.approved_at
+        FROM payment_orders po
+        JOIN members m ON m.id = po.member_id
+        WHERE po.order_id = #{orderId}
+            AND m.user_id = #{userId}
+        FOR UPDATE
+    </select>
+
+    <update id="markApproving">
+        UPDATE payment_orders
+        SET status = 'APPROVING',
+            payment_key = #{paymentKey},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+            AND status = 'READY'
+            AND expires_at >= CURRENT_TIMESTAMP
+    </update>
+
+    <update id="markPaid">
+        UPDATE payment_orders
+        SET status = 'PAID',
+            payment_id = #{paymentId},
+            approved_at = #{approvedAt},
+            failure_code = NULL,
+            failure_message = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+            AND status = 'APPROVING'
+    </update>
+
+    <update id="markFailed">
+        UPDATE payment_orders
+        SET status = 'FAILED',
+            failure_code = #{failureCode},
+            failure_message = #{failureMessage},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+            AND status = 'APPROVING'
+    </update>
+
+    <update id="expireReadyOrders">
+        UPDATE payment_orders
+        SET status = 'EXPIRED',
+        updated_at = CURRENT_TIMESTAMP
+        WHERE status = 'READY'
+        AND expires_at &lt; #{now}
+    </update>
+
+</mapper>

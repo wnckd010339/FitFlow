@@ -56,8 +56,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/payments/**")
                         .hasRole(SessionUser.ROLE_ADMIN)
 
+                        .requestMatchers("/api/member/**")
+                        .hasRole(SessionUser.ROLE_MEMBER)
+
                         .requestMatchers("/api/**")
                         .authenticated()
+
+
 
                         .anyRequest()
                         .denyAll()
