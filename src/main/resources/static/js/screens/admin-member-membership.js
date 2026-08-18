@@ -99,6 +99,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const history = actionButton("결제 내역", "history", membership.membershipId);
         actions.append(history);
         if (membership.status === "PENDING_PAYMENT") {
+            const methodSelect = element("select", "payment-method-select");
+            methodSelect.setAttribute("aria-label", "결제 수단");
+            methodSelect.append(
+                new Option("카드", "CARD"),
+                new Option("현금", "CASH"),
+                new Option("계좌이체", "TRANSFER")
+            );
+            actions.append(methodSelect);
             actions.append(actionButton("결제 완료", "pay", membership.membershipId));
             const cancel = actionButton("회원권 취소", "cancel", membership.membershipId);
             cancel.classList.add("danger-button");
@@ -141,13 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function handlePayment(button) {
-        const paymentMethod = window.prompt("결제수단을 입력해 주세요: CARD, CASH, TRANSFER", "CARD");
-        if (paymentMethod === null) return;
-        const normalized = paymentMethod.trim().toUpperCase();
-        if (!["CARD", "CASH", "TRANSFER"].includes(normalized)) {
-            showFeedback("결제수단은 CARD, CASH, TRANSFER 중 하나여야 합니다.", true);
-            return;
-        }
+        const normalized = button.parentElement.querySelector(".payment-method-select")?.value || "CARD";
         if (!window.confirm("선택한 회원권의 결제를 완료하시겠습니까?")) return;
         setProcessing(true, button);
         clearFeedback();

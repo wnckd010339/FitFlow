@@ -12,10 +12,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const historyBody = document.querySelector("#payment-history-body");
     const historyCount = document.querySelector("#payment-history-count");
     const feedback = document.querySelector("#payment-page-feedback");
+    const refundDialog = document.querySelector("#refund-dialog");
+    const refundForm = document.querySelector("#refund-form");
+    const refundAmount = document.querySelector("#refund-amount");
+    const refundReason = document.querySelector("#refund-reason");
+    const refundDialogError = document.querySelector("#refund-dialog-error");
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
     let historyItems = [];
     let processing = false;
+    let selectedRefundPaymentId = null;
+
+    // 상품 관리 탭에서는 결제 내역용 DOM이 렌더링되지 않는다.
+    if (!memberFilter || !historyBody || !feedback) return;
 
     memberFilter.addEventListener("change", () => {
         updateUrlContext();
@@ -25,6 +34,9 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach(control => control.addEventListener("input", applyFilters));
     resetButton.addEventListener("click", resetFilters);
     historyBody.addEventListener("click", handleRefund);
+    refundForm.addEventListener("submit", submitRefund);
+    document.querySelector("#close-refund-dialog").addEventListener("click", closeRefundDialog);
+    document.querySelector("#cancel-refund-dialog").addEventListener("click", closeRefundDialog);
     loadHistory();
 
     async function loadHistory() {
@@ -102,28 +114,44 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelector("#summary-partial").textContent = `${partialCount}건`;
     }
 
-    async function handleRefund(event) {
+    function handleRefund(event) {
         const button = event.target.closest("[data-refund-payment-id]");
         if (!button || processing) return;
-        const amount = window.prompt("환불 금액을 숫자로 입력해 주세요.");
-        if (amount === null) return;
-        const normalizedAmount = amount.replaceAll(",", "").trim();
-        if (!normalizedAmount || Number(normalizedAmount) <= 0) {
-            showFeedback("올바른 환불 금액을 입력해 주세요.", true);
+        selectedRefundPaymentId = button.dataset.refundPaymentId;
+        refundForm.reset();
+        refundDialogError.hidden = true;
+        refundDialog.showModal();
+        refundAmount.focus();
+    }
+
+    function closeRefundDialog() {
+        if (processing) return;
+        refundDialog.close();
+        selectedRefundPaymentId = null;
+    }
+
+    async function submitRefund(event) {
+        event.preventDefault();
+        const normalizedAmount = refundAmount.value.trim();
+        if (!selectedRefundPaymentId || !normalizedAmount || Number(normalizedAmount) <= 0) {
+            refundDialogError.textContent = "올바른 환불 금액을 입력해 주세요.";
+            refundDialogError.hidden = false;
             return;
         }
-        const reason = window.prompt("환불 사유를 입력해 주세요. (선택)") ?? "";
 
         setProcessing(true);
         try {
-            const result = await request(`/api/payments/${button.dataset.refundPaymentId}/refunds`, {
+            const result = await request(`/api/payments/${selectedRefundPaymentId}/refunds`, {
                 method: "POST",
-                body: JSON.stringify({amount: normalizedAmount, reason})
+                body: JSON.stringify({amount: normalizedAmount, reason: refundReason.value.trim()})
             });
+            refundDialog.close();
+            selectedRefundPaymentId = null;
             showFeedback(result.message, false);
             await loadHistory();
         } catch (error) {
-            showFeedback(error.message, true);
+            refundDialogError.textContent = error.message;
+            refundDialogError.hidden = false;
         } finally {
             setProcessing(false);
         }

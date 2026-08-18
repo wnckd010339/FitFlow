@@ -130,6 +130,39 @@
             AND status = 'ACTIVE'
     </select>
 
+    <select id="findAllProducts" resultMap="MembershipProductResultMap">
+        SELECT id, name, product_type, duration_days, price, pt_session_count, status
+        FROM membership_products
+        ORDER BY status, product_type, duration_days, id
+    </select>
+
+    <select id="existsProductName" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM membership_products
+            WHERE name = #{name}
+            <if test="excludedId != null">AND id != #{excludedId}</if>
+        )
+    </select>
+
+    <insert id="insertProduct">
+        INSERT INTO membership_products
+            (name, product_type, duration_days, price, pt_session_count, status)
+        VALUES
+            (#{name}, #{productType}, #{durationDays}, #{price}, #{ptSessionCount}, #{status})
+    </insert>
+
+    <update id="updateProduct">
+        UPDATE membership_products
+        SET name = #{request.name},
+            product_type = #{request.productType},
+            duration_days = #{request.durationDays},
+            price = #{request.price},
+            pt_session_count = #{request.ptSessionCount},
+            status = #{request.status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{productId}
+    </update>
+
     <select id="existsMemberById"
             resultType="boolean">
         SELECT EXISTS (

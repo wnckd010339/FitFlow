@@ -12,9 +12,14 @@
           (SELECT COUNT(*) FROM member_memberships WHERE status = 'ACTIVE' AND end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL 7 DAY) AS expiring_membership_count,
           (SELECT COUNT(*) FROM attendances WHERE attendance_date = CURRENT_DATE AND checked_out_at IS NULL) AS current_count,
           (SELECT COUNT(*) FROM attendances WHERE attendance_date = CURRENT_DATE AND checked_out_at IS NOT NULL) AS checked_out_count,
-          ((SELECT COUNT(*) FROM member_memberships WHERE status = 'ACTIVE' AND end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL 7 DAY)
-           + (SELECT COUNT(*) FROM equipment WHERE status IN ('INSPECTION','REPAIR','UNAVAILABLE'))
-           + (SELECT COUNT(*) FROM members m WHERE m.status = 'ACTIVE' AND m.trainer_requested = TRUE AND NOT EXISTS (SELECT 1 FROM trainer_assignments ta WHERE ta.member_id = m.id AND ta.status = 'ACTIVE'))) AS alert_count
+          (SELECT COUNT(*) FROM attendances WHERE attendance_date = CURRENT_DATE AND checked_out_at IS NULL) AS open_attendance_alert_count,
+          (SELECT COUNT(*) FROM members m WHERE m.status = 'ACTIVE' AND m.trainer_requested = TRUE
+             AND NOT EXISTS (SELECT 1 FROM trainer_assignments ta WHERE ta.member_id = m.id AND ta.status = 'ACTIVE')) AS trainer_request_alert_count,
+          (SELECT COUNT(*) FROM equipment WHERE status IN ('INSPECTION','REPAIR','UNAVAILABLE')) AS facility_alert_count,
+          ((SELECT EXISTS(SELECT 1 FROM attendances WHERE attendance_date = CURRENT_DATE AND checked_out_at IS NULL))
+           + (SELECT EXISTS(SELECT 1 FROM members m WHERE m.status = 'ACTIVE' AND m.trainer_requested = TRUE
+               AND NOT EXISTS (SELECT 1 FROM trainer_assignments ta WHERE ta.member_id = m.id AND ta.status = 'ACTIVE')))
+           + (SELECT EXISTS(SELECT 1 FROM equipment WHERE status IN ('INSPECTION','REPAIR','UNAVAILABLE')))) AS alert_count
     </select>
 
     <select id="findHourlyAttendance" resultType="com.acorn.gymmanagement.dashboard.dto.response.HourlyAttendanceCount">

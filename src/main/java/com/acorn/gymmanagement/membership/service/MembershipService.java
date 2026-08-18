@@ -2,6 +2,7 @@ package com.acorn.gymmanagement.membership.service;
 import com.acorn.gymmanagement.common.exception.BusinessException;
 import com.acorn.gymmanagement.common.exception.ErrorCode;
 import com.acorn.gymmanagement.membership.dto.request.CreateMemberMembershipRequest;
+import com.acorn.gymmanagement.membership.dto.request.MembershipProductRequest;
 import com.acorn.gymmanagement.membership.dto.response.MemberMembershipResponse;
 import com.acorn.gymmanagement.membership.dto.response.MembershipProductOptionResponse;
 import com.acorn.gymmanagement.membership.mapper.MembershipMapper;
@@ -30,6 +31,37 @@ public class MembershipService {
 
     public List<MembershipProductOptionResponse> findActiveProducts() {
         return membershipMapper.findActiveProducts();
+    }
+
+    public List<MembershipProduct> findAllProducts() {
+        return membershipMapper.findAllProducts();
+    }
+
+    @Transactional
+    public void createProduct(MembershipProductRequest request) {
+        validateProduct(request, null);
+        validateAffectedRows(membershipMapper.insertProduct(request), "회원권 상품 등록에 실패했습니다.");
+    }
+
+    @Transactional
+    public void updateProduct(Long productId, MembershipProductRequest request) {
+        validateProduct(request, productId);
+        validateAffectedRows(membershipMapper.updateProduct(productId, request), "회원권 상품 수정에 실패했습니다.");
+    }
+
+    private void validateProduct(MembershipProductRequest request, Long excludedId) {
+        String normalizedName = request.name().trim();
+        if (membershipMapper.existsProductName(normalizedName, excludedId)) {
+            throw new BusinessException(ErrorCode.CONFLICT, "이미 사용 중인 회원권 상품명입니다.");
+        }
+        boolean ptProduct = request.productType().name().equals("PT")
+                || request.productType().name().equals("COMBINED");
+        if (ptProduct && request.ptSessionCount() == 0) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "PT 상품은 PT 횟수가 1회 이상이어야 합니다.");
+        }
+        if (!ptProduct && request.ptSessionCount() != 0) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "헬스 전용 상품의 PT 횟수는 0이어야 합니다.");
+        }
     }
 
     @Transactional

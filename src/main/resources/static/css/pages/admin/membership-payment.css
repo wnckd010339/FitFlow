@@ -96,6 +96,45 @@ button, input, select { font: inherit; }
     cursor: pointer;
 }
 
+.management-tabs { display: flex; gap: 8px; margin-top: 22px; border-bottom: 1px solid var(--line); }
+.management-tabs a { padding: 12px 16px; color: var(--muted); border-bottom: 3px solid transparent; font-size: 13px; font-weight: 700; text-decoration: none; }
+.management-tabs a.active { color: var(--green); border-bottom-color: var(--green); }
+.notice { margin: 18px 0 0; padding: 13px 16px; border-radius: 11px; font-size: 12px; }
+.notice.success { color: var(--green); background: #edf8f4; }
+.notice.error, .form-errors { color: var(--danger); background: #fbeaea; }
+.product-management { margin-top: 22px; }
+.product-create-card, .product-list-card { padding: 26px 28px; background: #fff; border: 1px solid var(--line); border-radius: 18px; }
+.product-list-card { margin-top: 20px; }
+.product-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.product-section-heading h2, .product-section-heading p { margin: 0; }
+.product-section-heading h2 { font-size: 18px; }
+.product-section-heading p { margin-top: 7px; color: var(--muted); font-size: 12px; }
+.product-section-heading button, .product-row-form button { min-height: 38px; padding: 0 14px; color: #fff; background: var(--green); border: 0; border-radius: 9px; font-weight: 700; cursor: pointer; }
+.product-form-grid { display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 14px; margin-top: 22px; }
+.product-form-grid label { display: grid; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 700; }
+.product-form-grid input, .product-form-grid select, .product-row-form input, .product-row-form select { width: 100%; height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+.form-errors { margin: 14px 0 0; padding: 12px 30px; border-radius: 9px; font-size: 12px; }
+.product-table-scroll { margin-top: 20px; overflow-x: auto; }
+.product-list-card table { width: 100%; min-width: 900px; border-collapse: collapse; }
+.product-list-card th, .product-list-card td { padding: 11px 8px; border-bottom: 1px solid #edf2ef; text-align: left; font-size: 11px; }
+.product-list-card th { color: var(--muted); background: #f7faf9; }
+.product-row-form { display: grid; grid-template-columns: 2fr 1.15fr .75fr 1.1fr .7fr 1fr auto; gap: 10px; align-items: center; }
+.product-row-form label { display: flex; align-items: center; gap: 4px; color: var(--muted); }
+.product-row-form label span { white-space: nowrap; }
+.refund-dialog { width: min(480px, calc(100% - 32px)); padding: 0; border: 0; border-radius: 18px; box-shadow: 0 24px 70px rgba(21, 51, 44, .28); }
+.refund-dialog::backdrop { background: rgba(16, 44, 37, .48); }
+.refund-dialog form { display: grid; gap: 16px; padding: 24px; }
+.refund-dialog-heading { display: flex; justify-content: space-between; gap: 16px; }
+.refund-dialog-heading h2, .refund-dialog-heading p { margin: 0; }
+.refund-dialog-heading p { margin-top: 5px; color: var(--muted); font-size: 12px; }
+.refund-dialog-heading > button { border: 0; background: none; font-size: 24px; cursor: pointer; }
+.refund-dialog label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.refund-dialog input, .refund-dialog textarea { padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; resize: vertical; }
+.refund-dialog-error { margin: 0; padding: 10px 12px; color: var(--danger); background: #fbeaea; border-radius: 8px; font-size: 12px; }
+.refund-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.refund-dialog-actions button { min-height: 40px; padding: 0 15px; border: 1px solid var(--line); border-radius: 9px; background: #fff; font-weight: 700; cursor: pointer; }
+.refund-dialog-actions .refund-submit { color: #fff; background: var(--green); border-color: var(--green); }
+
 .selected-member-context {
     gap: 13px;
     margin-top: 20px;
@@ -294,6 +333,7 @@ button, input, select { font: inherit; }
 @media (max-width: 1200px) {
     .payment-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .payment-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .product-form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
@@ -308,4 +348,8 @@ button, input, select { font: inherit; }
     .payment-history-card { padding: 22px 18px; }
     .selected-member-context { flex-wrap: wrap; }
     .selected-member-label { width: 100%; margin-left: 53px; }
+    .product-create-card, .product-list-card { padding: 22px 18px; }
+    .product-section-heading { flex-direction: column; }
+    .product-form-grid { grid-template-columns: 1fr; }
+    .product-section-heading button { width: 100%; }
 }

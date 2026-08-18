@@ -8,4 +8,19 @@ document.addEventListener("DOMContentLoaded", () => {
         button.setAttribute("aria-expanded", String(open));
         if (open) panel.querySelector("a")?.focus();
     });
+    document.addEventListener("click", event => {
+        if (panel.hidden || event.target.closest(".alert-menu")) return;
+        closePanel();
+    });
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !panel.hidden) {
+            closePanel();
+            button.focus();
+        }
+    });
+
+    function closePanel() {
+        panel.hidden = true;
+        button.setAttribute("aria-expanded", "false");
+    }
 });

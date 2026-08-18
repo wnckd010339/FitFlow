@@ -1,0 +1,11 @@
+.notice-error { color: #a93636; background: #ffe8e8; }
+.row-actions { display: flex; gap: 7px; align-items: flex-start; }
+.row-actions:has(details[open]) { flex-direction: row; }
+.row-actions details[open] { width: auto; }
+.row-actions details { position: static; }
+.row-actions summary { padding: 7px 9px; border: 1px solid #c9d9d2; border-radius: 8px; color: #087b57; font-weight: 700; white-space: nowrap; cursor: pointer; list-style: none; }
+.inline-management-form { position: fixed; z-index: 30; display: grid; grid-template-columns: 1fr; width: 300px; max-height: min(380px, calc(100vh - 32px)); gap: 9px; margin-top: 0; padding: 14px; overflow-y: auto; background: #fff; border: 1px solid #c9d9d2; border-radius: 12px; box-shadow: 0 14px 38px #173b3035; }
+.inline-management-form button { grid-column: auto; }
+.inline-management-form input, .inline-management-form select, .inline-management-form button { height: 38px; padding: 0 10px; border: 1px solid #c9d9d2; border-radius: 8px; background: #fff; }
+.inline-management-form button { color: #fff; background: #07845f; border-color: #07845f; font-weight: 700; cursor: pointer; }
+@media (max-width: 640px) { .row-actions { flex-wrap: wrap; } .inline-management-form { width: min(280px, calc(100vw - 32px)); } }

@@ -47,6 +47,12 @@
         INSERT INTO equipment (name, category, location, status, purchased_at)
         VALUES (#{name}, #{category}, #{location}, 'AVAILABLE', #{purchasedAt})
     </insert>
+    <update id="updateEquipment">
+        UPDATE equipment
+        SET name = #{request.name}, category = #{request.category}, location = #{request.location},
+            status = #{request.status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{equipmentId}
+    </update>
     <select id="existsEquipment" resultType="boolean">
         SELECT EXISTS(SELECT 1 FROM equipment WHERE id = #{equipmentId})
     </select>

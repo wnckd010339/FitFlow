@@ -4,6 +4,7 @@ import com.acorn.gymmanagement.common.exception.BusinessException;
 import com.acorn.gymmanagement.common.exception.ErrorCode;
 import com.acorn.gymmanagement.facility.dto.request.EquipmentRegistrationRequest;
 import com.acorn.gymmanagement.facility.dto.request.EquipmentSearchCondition;
+import com.acorn.gymmanagement.facility.dto.request.EquipmentUpdateRequest;
 import com.acorn.gymmanagement.facility.dto.response.EquipmentListResponse;
 import com.acorn.gymmanagement.facility.dto.response.FacilitySummaryResponse;
 import com.acorn.gymmanagement.facility.mapper.FacilityMapper;
@@ -29,6 +30,16 @@ public class FacilityService {
     public void register(EquipmentRegistrationRequest request) {
         if (facilityMapper.insertEquipment(request) != 1) {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "기구를 등록하지 못했습니다.");
+        }
+    }
+
+    @Transactional
+    public void update(Long equipmentId, EquipmentUpdateRequest request) {
+        if (!facilityMapper.existsEquipment(equipmentId)) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "수정할 기구를 찾을 수 없습니다.");
+        }
+        if (facilityMapper.updateEquipment(equipmentId, request) != 1) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "기구 정보를 수정하지 못했습니다.");
         }
     }
 

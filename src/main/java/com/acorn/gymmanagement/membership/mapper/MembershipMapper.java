@@ -4,6 +4,7 @@ import com.acorn.gymmanagement.membership.dto.response.MembershipProductOptionRe
 import com.acorn.gymmanagement.membership.model.MemberMembershipRegistration;
 import com.acorn.gymmanagement.membership.model.MembershipStatus;
 import com.acorn.gymmanagement.membership.model.MembershipProduct;
+import com.acorn.gymmanagement.membership.dto.request.MembershipProductRequest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -27,6 +28,14 @@ public interface MembershipMapper {
     );
 
     List<MembershipProductOptionResponse> findActiveProducts();
+
+    List<MembershipProduct> findAllProducts();
+
+    boolean existsProductName(@Param("name") String name, @Param("excludedId") Long excludedId);
+
+    int insertProduct(MembershipProductRequest request);
+
+    int updateProduct(@Param("productId") Long productId, @Param("request") MembershipProductRequest request);
 
     Optional<MembershipProduct> findActiveProductById(
             @Param("productId") Long productId

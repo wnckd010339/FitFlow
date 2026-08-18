@@ -9,6 +9,9 @@ import com.acorn.gymmanagement.member.dto.request.CreateMemberRequest;
 import com.acorn.gymmanagement.member.service.MemberService;
 import com.acorn.gymmanagement.member.view.MemberHomeView;
 import com.acorn.gymmanagement.membership.service.MembershipService;
+import com.acorn.gymmanagement.payment.service.PaymentService;
+import com.acorn.gymmanagement.facility.service.FacilityService;
+import com.acorn.gymmanagement.facility.dto.response.FacilitySummaryResponse;
 import com.acorn.gymmanagement.mypage.service.MemberPortalService;
 import com.acorn.gymmanagement.mypage.dto.response.MemberProfileView;
 import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeProfileResponse;
@@ -67,6 +70,12 @@ class SecurityAccessTest {
     private MembershipService membershipService;
 
     @MockitoBean
+    private PaymentService paymentService;
+
+    @MockitoBean
+    private FacilityService facilityService;
+
+    @MockitoBean
     private TrainerAdminService trainerService;
 
     @MockitoBean
@@ -81,7 +90,7 @@ class SecurityAccessTest {
     @BeforeEach
     void setUpDashboard() {
         DashboardSummaryResponse summary = new DashboardSummaryResponse(
-                0, 0, 0, 0, BigDecimal.ZERO, 0, 0, 0, 0
+                0, 0, 0, 0, BigDecimal.ZERO, 0, 0, 0, 0, 0, 0, 0
         );
         when(dashboardService.getDashboard()).thenReturn(new DashboardResponse(
                 "테스트 날짜", summary, 0, List.of(), List.of(), List.of()
@@ -101,6 +110,10 @@ class SecurityAccessTest {
                 "tester@fitflow.com", "ACTIVE", 10, 3, 5
         ));
         when(membershipService.findActiveProducts()).thenReturn(List.of());
+        when(membershipService.findAllProducts()).thenReturn(List.of());
+        when(paymentService.findActiveMembers()).thenReturn(List.of());
+        when(facilityService.getSummary()).thenReturn(new FacilitySummaryResponse(0, 0, 0, 0));
+        when(facilityService.findEquipment(org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
         when(trainerMemberService.homeProfile(1L)).thenReturn(new TrainerHomeProfileResponse(
                 "테스트 트레이너", "근력 운동", 0, 0, 0, 0
         ));
@@ -183,6 +196,33 @@ class SecurityAccessTest {
     void adminCanAccessAdminPage() throws Exception {
         mockMvc.perform(get("/admin/dashboard").session(session(SessionUser.ROLE_ADMIN)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void adminMembershipProductTabRenders() throws Exception {
+        mockMvc.perform(get("/admin/memberships")
+                        .param("view", "products")
+                        .session(session(SessionUser.ROLE_ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("새 회원권 상품")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("등록 상품")));
+    }
+
+    @Test
+    void adminMembershipHistoryTabRenders() throws Exception {
+        mockMvc.perform(get("/admin/memberships")
+                        .param("view", "history")
+                        .session(session(SessionUser.ROLE_ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("결제·환불 내역")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("refund-dialog")));
+    }
+
+    @Test
+    void adminFacilityPageRendersEditAction() throws Exception {
+        mockMvc.perform(get("/admin/facilities").session(session(SessionUser.ROLE_ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("시설 및 기구 관리")));
     }
 
     @Test
