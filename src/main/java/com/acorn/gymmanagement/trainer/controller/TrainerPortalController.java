@@ -44,10 +44,23 @@ public class TrainerPortalController {
  @GetMapping("/workouts") String workouts(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser u,@RequestParam(required=false) Long memberId,Model m){m.addAttribute("members",service.members(u.userId(),null));m.addAttribute("workouts",service.workouts(u.userId(),memberId));m.addAttribute("selectedMemberId",memberId);return "trainer/workouts";}
  @GetMapping("/workouts/new") String newWorkout(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser u,Model m){workoutForm(m,new TrainerWorkoutForm(null,null,"",3,null,null,60,""),u.userId());return "trainer/workout-form";}
  @PostMapping("/workouts") String createWorkout(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser u,@Valid @ModelAttribute TrainerWorkoutForm form,BindingResult b,Model m,RedirectAttributes r){if(b.hasErrors()){workoutForm(m,form,u.userId());return "trainer/workout-form";}service.createWorkout(u.userId(),form);r.addFlashAttribute("message","운동 기록을 저장했습니다.");return "redirect:/trainer/workouts";}
- @GetMapping("/workouts/{sessionId}/edit") String editWorkout(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser u,@PathVariable Long sessionId,Model m){TrainerWorkoutView v=service.workout(u.userId(),sessionId);long minutes=java.time.Duration.between(v.startedAt(),v.endedAt()).toMinutes();workoutForm(m,new TrainerWorkoutForm(v.memberId(),null,v.exerciseName(),v.sets(),null,null,(int)Math.max(1,minutes),v.memo()),u.userId());m.addAttribute("sessionId",sessionId);return "trainer/workout-form";}
+ @GetMapping("/workouts/{sessionId}/edit") String editWorkout(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser u,@PathVariable Long sessionId,Model m){TrainerWorkoutView v=service.workout(u.userId(),sessionId);workoutForm(m,toWorkoutForm(v),u.userId());m.addAttribute("sessionId",sessionId);return "trainer/workout-form";}
  @PostMapping("/workouts/{sessionId}") String updateWorkout(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser u,@PathVariable Long sessionId,@Valid @ModelAttribute TrainerWorkoutForm form,BindingResult b,Model m,RedirectAttributes r){if(b.hasErrors()){workoutForm(m,form,u.userId());m.addAttribute("sessionId",sessionId);return "trainer/workout-form";}service.updateWorkout(u.userId(),sessionId,form);r.addFlashAttribute("message","운동 기록을 수정했습니다.");return "redirect:/trainer/workouts";}
  @GetMapping("/profile") String profile(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser u,Model m){var p=service.profile(u.userId());m.addAttribute("profileForm",new TrainerProfileForm(p.name(),p.phone(),p.specialty()));return "trainer/profile";}
  @PostMapping("/profile") String updateProfile(@SessionAttribute(SessionUser.SESSION_KEY) SessionUser u,@Valid @ModelAttribute("profileForm") TrainerProfileForm form,BindingResult b,RedirectAttributes r){if(b.hasErrors())return "trainer/profile";service.updateProfile(u.userId(),form);r.addFlashAttribute("message","내 정보를 수정했습니다.");return "redirect:/trainer/profile";}
  private void routineForm(Model m,TrainerRoutineForm f,Long id){m.addAttribute("routineForm",f);m.addAttribute("members",service.members(id,null));}
  private void workoutForm(Model m,TrainerWorkoutForm f,Long id){m.addAttribute("workoutForm",f);m.addAttribute("members",service.members(id,null));}
+ static TrainerWorkoutForm toWorkoutForm(TrainerWorkoutView workout) {
+     long minutes = java.time.Duration.between(workout.startedAt(), workout.endedAt()).toMinutes();
+     return new TrainerWorkoutForm(
+             workout.memberId(),
+             workout.routineId(),
+             workout.exerciseName(),
+             workout.sets(),
+             workout.weight(),
+             workout.reps(),
+             (int) Math.max(1, minutes),
+             workout.memo()
+     );
+ }
 }
