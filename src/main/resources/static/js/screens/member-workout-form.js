@@ -1,0 +1,5 @@
+const list=document.querySelector('#member-exercise-list');const template=document.querySelector('#member-exercise-template');const add=document.querySelector('#add-member-exercise');
+function reindex(){if(!list)return;[...list.children].forEach((card,index)=>{card.querySelector('strong').textContent=`운동 ${index+1}`;card.querySelectorAll('[name]').forEach(input=>input.name=input.name.replace(/exercises\[\d+\]/,`exercises[${index}]`));});}
+if(add&&list&&template)add.addEventListener('click',()=>{list.insertAdjacentHTML('beforeend',template.innerHTML.replaceAll('__INDEX__',list.children.length));reindex();});
+if(list)list.addEventListener('click',event=>{if(!event.target.matches('.remove-member-exercise'))return;if(list.children.length<=1){alert('운동 항목은 하나 이상 필요합니다.');return;}event.target.closest('.member-exercise-card').remove();reindex();});
+document.querySelectorAll('form[data-confirm]').forEach(form=>form.addEventListener('submit',event=>{if(!confirm(form.dataset.confirm))event.preventDefault();}));
