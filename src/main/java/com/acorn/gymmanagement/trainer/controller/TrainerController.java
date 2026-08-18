@@ -1,7 +1,7 @@
 package com.acorn.gymmanagement.trainer.controller;
 
 import com.acorn.gymmanagement.trainer.dto.request.TrainerSearchCondition;
-import com.acorn.gymmanagement.trainer.service.TrainerService;
+import com.acorn.gymmanagement.trainer.service.TrainerAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +21,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/admin/trainers")
 @RequiredArgsConstructor
 public class TrainerController {
-    private final TrainerService trainerService;
+    private final TrainerAdminService trainerService;
 
     @GetMapping
     public String index(@RequestParam(required = false) String keyword,

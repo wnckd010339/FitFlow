@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acorn.gymmanagement.trainer.mapper.TrainerRoutineMapper">
+    <select id="findRoutines" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerRoutineView">
+        SELECT wr.id AS routine_id, m.id AS member_id, m.name AS member_name,
+               wr.title, wr.description, wr.start_date, wr.end_date,
+               (SELECT COUNT(*) FROM routine_exercises re WHERE re.routine_id = wr.id) AS exercise_count
+        FROM workout_routines wr
+        JOIN trainers t ON t.id = wr.trainer_id AND t.user_id = #{userId}
+        JOIN members m ON m.id = wr.member_id
+        WHERE wr.status = 'ACTIVE' AND (#{memberId} IS NULL OR m.id = #{memberId})
+        ORDER BY wr.updated_at DESC
+    </select>
+    <select id="findRoutine" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerRoutineView">
+        SELECT wr.id AS routine_id, m.id AS member_id, m.name AS member_name,
+               wr.title, wr.description, wr.start_date, wr.end_date,
+               (SELECT COUNT(*) FROM routine_exercises re WHERE re.routine_id = wr.id) AS exercise_count
+        FROM workout_routines wr
+        JOIN trainers t ON t.id = wr.trainer_id AND t.user_id = #{userId}
+        JOIN members m ON m.id = wr.member_id
+        WHERE wr.id = #{routineId} AND wr.status = 'ACTIVE'
+    </select>
+    <select id="findRoutineExercises" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerRoutineExerciseView">
+        SELECT id AS exercise_id, exercise_name, display_order, target_sets,
+               target_reps_min, target_reps_max, target_weight, rest_seconds, memo
+        FROM routine_exercises
+        WHERE routine_id = #{routineId}
+        ORDER BY display_order, id
+    </select>
+    <select id="existsRoutineForMember" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM workout_routines wr
+            JOIN trainers t ON t.id = wr.trainer_id
+            WHERE wr.id = #{routineId} AND wr.member_id = #{memberId}
+              AND wr.status = 'ACTIVE' AND t.user_id = #{userId}
+        )
+    </select>
+    <insert id="insertRoutine" useGeneratedKeys="true" keyProperty="routineId" keyColumn="id">
+        INSERT INTO workout_routines(member_id, trainer_id, title, description, status, start_date, end_date)
+        VALUES(#{memberId}, #{trainerId}, #{title}, #{description}, 'ACTIVE', #{startDate}, #{endDate})
+    </insert>
+    <update id="updateRoutine">
+        UPDATE workout_routines
+        SET title = #{title}, description = #{description}, start_date = #{startDate},
+            end_date = #{endDate}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{routineId} AND trainer_id = #{trainerId}
+    </update>
+    <update id="cancelRoutine">
+        UPDATE workout_routines wr
+        JOIN trainers t ON t.id = wr.trainer_id
+        SET wr.status = 'CANCELLED', wr.updated_at = CURRENT_TIMESTAMP
+        WHERE wr.id = #{routineId} AND t.user_id = #{userId} AND wr.status = 'ACTIVE'
+    </update>
+    <delete id="deleteRoutineExercises">
+        DELETE FROM routine_exercises WHERE routine_id = #{routineId}
+    </delete>
+    <insert id="insertRoutineExercise">
+        INSERT INTO routine_exercises(
+            routine_id, exercise_name, display_order, target_sets, target_reps_min,
+            target_reps_max, target_weight, rest_seconds, memo
+        )
+        VALUES(
+            #{routineId}, #{exerciseName}, #{displayOrder}, #{targetSets}, #{targetRepsMin},
+            #{targetRepsMax}, #{targetWeight}, #{restSeconds}, #{memo}
+        )
+    </insert>
+</mapper>

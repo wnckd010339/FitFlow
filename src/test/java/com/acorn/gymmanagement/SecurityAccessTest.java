@@ -12,7 +12,11 @@ import com.acorn.gymmanagement.membership.service.MembershipService;
 import com.acorn.gymmanagement.mypage.service.MemberPortalService;
 import com.acorn.gymmanagement.mypage.dto.response.MemberProfileView;
 import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeProfileResponse;
-import com.acorn.gymmanagement.trainer.service.TrainerService;
+import com.acorn.gymmanagement.trainer.service.TrainerAdminService;
+import com.acorn.gymmanagement.trainer.dto.response.TrainerProfileView;
+import com.acorn.gymmanagement.trainer.service.TrainerMemberService;
+import com.acorn.gymmanagement.trainer.service.TrainerRoutineService;
+import com.acorn.gymmanagement.trainer.service.TrainerWorkoutService;
 import com.acorn.gymmanagement.member.model.MemberGender;
 import com.acorn.gymmanagement.security.SessionUser;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +67,16 @@ class SecurityAccessTest {
     private MembershipService membershipService;
 
     @MockitoBean
-    private TrainerService trainerService;
+    private TrainerAdminService trainerService;
+
+    @MockitoBean
+    private TrainerMemberService trainerMemberService;
+
+    @MockitoBean
+    private TrainerRoutineService trainerRoutineService;
+
+    @MockitoBean
+    private TrainerWorkoutService trainerWorkoutService;
 
     @BeforeEach
     void setUpDashboard() {
@@ -88,10 +101,12 @@ class SecurityAccessTest {
                 "tester@fitflow.com", "ACTIVE", 10, 3, 5
         ));
         when(membershipService.findActiveProducts()).thenReturn(List.of());
-        when(trainerService.getHomeProfile(1L)).thenReturn(new TrainerHomeProfileResponse(
+        when(trainerMemberService.homeProfile(1L)).thenReturn(new TrainerHomeProfileResponse(
                 "테스트 트레이너", "근력 운동", 0, 0, 0, 0
         ));
-        when(trainerService.findHomeMembers(1L)).thenReturn(List.of());
+        when(trainerMemberService.homeMembers(1L)).thenReturn(List.of());
+        when(trainerMemberService.profile(1L)).thenReturn(
+                new TrainerProfileView("테스트 트레이너", "010-1234-5678", "근력 운동"));
     }
 
     @Test
@@ -180,6 +195,18 @@ class SecurityAccessTest {
     void trainerCanAccessTrainerPage() throws Exception {
         mockMvc.perform(get("/trainer/home").session(session(SessionUser.ROLE_TRAINER)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void memberCannotAccessTrainerPage() throws Exception {
+        mockMvc.perform(get("/trainer/home").session(session(SessionUser.ROLE_MEMBER)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminCannotAccessTrainerPage() throws Exception {
+        mockMvc.perform(get("/trainer/home").session(session(SessionUser.ROLE_ADMIN)))
+                .andExpect(status().isForbidden());
     }
 
     @Test

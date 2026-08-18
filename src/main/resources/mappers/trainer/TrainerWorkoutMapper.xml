@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acorn.gymmanagement.trainer.mapper.TrainerWorkoutMapper">
+    <select id="findWorkoutDays" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerWorkoutDayView">
+        SELECT m.id AS member_id, m.name AS member_name, DATE(ws.started_at) AS workout_date,
+               GROUP_CONCAT(DISTINCT CASE
+                   WHEN wset.exercise_name REGEXP '스쿼트|레그|런지|데드리프트|힙|카프' THEN '하체'
+                   WHEN wset.exercise_name REGEXP '벤치|체스트|푸시업|딥스|플라이|삼두|트라이셉스' THEN '가슴 + 삼두'
+                   WHEN wset.exercise_name REGEXP '로우|랫풀|풀업|등|이두|바이셉스' THEN '등 + 이두'
+                   WHEN wset.exercise_name REGEXP '숄더|어깨|레터럴|오버헤드' THEN '어깨'
+                   WHEN wset.exercise_name REGEXP '러닝|트레드밀|사이클|유산소' THEN '유산소'
+                   ELSE '기타'
+               END ORDER BY ws.started_at SEPARATOR ', ') AS workout_summary,
+               COUNT(DISTINCT wset.exercise_name) AS exercise_count,
+               COUNT(wset.id) AS total_sets, MIN(ws.id) AS first_session_id
+        FROM workout_sessions ws
+        JOIN members m ON m.id = ws.member_id
+        LEFT JOIN workout_sets wset ON wset.session_id = ws.id
+        JOIN trainer_assignments ta ON ta.member_id = m.id AND ta.status = 'ACTIVE'
+        JOIN trainers t ON t.id = ta.trainer_id AND t.user_id = #{userId}
+        WHERE (#{memberId} IS NULL OR m.id = #{memberId})
+        GROUP BY m.id, m.name, DATE(ws.started_at)
+        ORDER BY workout_date DESC, m.name
+    </select>
+    <select id="findWorkoutsByDate" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerWorkoutView">
+        SELECT ws.id AS session_id, m.id AS member_id, m.name AS member_name, ws.routine_id,
+               COALESCE(NULLIF(REGEXP_REPLACE(ws.memo, '[[:space:]]*루틴.*$', ''), ''), wr.title, '개인 운동') AS routine_title,
+               ws.started_at, ws.ended_at, wset.exercise_name, COUNT(wset.id) AS sets,
+               MAX(wset.weight) AS weight, MAX(wset.reps) AS reps, ws.memo
+        FROM workout_sessions ws
+        JOIN members m ON m.id = ws.member_id
+        LEFT JOIN workout_routines wr ON wr.id = ws.routine_id
+        LEFT JOIN workout_sets wset ON wset.session_id = ws.id
+        JOIN trainer_assignments ta ON ta.member_id = m.id AND ta.status = 'ACTIVE'
+        JOIN trainers t ON t.id = ta.trainer_id AND t.user_id = #{userId}
+        WHERE m.id = #{memberId} AND DATE(ws.started_at) = #{workoutDate}
+        GROUP BY ws.id, m.id, m.name, ws.routine_id, wr.title, ws.started_at,
+                 ws.ended_at, ws.memo, wset.exercise_name
+        ORDER BY ws.started_at, wset.exercise_name
+    </select>
+    <select id="findWorkout" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerWorkoutView">
+        SELECT ws.id AS session_id, m.id AS member_id, m.name AS member_name, ws.routine_id,
+               COALESCE(wr.title, '개인 운동') AS routine_title, ws.started_at, ws.ended_at,
+               MAX(wset.exercise_name) AS exercise_name, COUNT(wset.id) AS sets,
+               MAX(wset.weight) AS weight, MAX(wset.reps) AS reps, ws.memo
+        FROM workout_sessions ws
+        JOIN members m ON m.id = ws.member_id
+        LEFT JOIN workout_routines wr ON wr.id = ws.routine_id
+        LEFT JOIN workout_sets wset ON wset.session_id = ws.id
+        JOIN trainer_assignments ta ON ta.member_id = m.id AND ta.status = 'ACTIVE'
+        JOIN trainers t ON t.id = ta.trainer_id AND t.user_id = #{userId}
+        WHERE ws.id = #{sessionId}
+        GROUP BY ws.id, m.id, m.name, ws.routine_id, wr.title, ws.started_at, ws.ended_at, ws.memo
+    </select>
+    <select id="findWorkoutExercises" resultType="com.acorn.gymmanagement.trainer.dto.response.TrainerWorkoutExerciseView">
+        SELECT wset.exercise_name, COUNT(*) AS sets, MAX(wset.weight) AS weight, MAX(wset.reps) AS reps
+        FROM workout_sets wset
+        JOIN workout_sessions ws ON ws.id = wset.session_id
+        JOIN trainer_assignments ta ON ta.member_id = ws.member_id AND ta.status = 'ACTIVE'
+        JOIN trainers t ON t.id = ta.trainer_id AND t.user_id = #{userId}
+        WHERE ws.id = #{sessionId}
+        GROUP BY wset.exercise_name
+        ORDER BY MIN(wset.id)
+    </select>
+    <insert id="insertWorkoutSession" useGeneratedKeys="true" keyProperty="sessionId" keyColumn="id">
+        INSERT INTO workout_sessions(member_id, routine_id, started_at, ended_at, memo)
+        VALUES(#{memberId}, #{routineId}, #{startedAt}, #{endedAt}, #{memo})
+    </insert>
+    <update id="updateWorkoutSession">
+        UPDATE workout_sessions
+        SET routine_id = #{routineId}, started_at = #{startedAt}, ended_at = #{endedAt},
+            memo = #{memo}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{sessionId} AND member_id = #{memberId}
+    </update>
+    <delete id="deleteWorkoutSets">DELETE FROM workout_sets WHERE session_id = #{sessionId}</delete>
+    <delete id="deleteWorkoutSession">
+        DELETE ws FROM workout_sessions ws
+        JOIN trainer_assignments ta ON ta.member_id = ws.member_id AND ta.status = 'ACTIVE'
+        JOIN trainers t ON t.id = ta.trainer_id
+        WHERE ws.id = #{sessionId} AND t.user_id = #{userId}
+    </delete>
+    <delete id="deleteWorkoutSetsByDate">
+        DELETE wset FROM workout_sets wset
+        JOIN workout_sessions ws ON ws.id = wset.session_id
+        JOIN trainer_assignments ta ON ta.member_id = ws.member_id AND ta.status = 'ACTIVE'
+        JOIN trainers t ON t.id = ta.trainer_id
+        WHERE ws.member_id = #{memberId} AND DATE(ws.started_at) = #{workoutDate}
+          AND t.user_id = #{userId}
+    </delete>
+    <delete id="deleteWorkoutSessionsByDate">
+        DELETE ws FROM workout_sessions ws
+        JOIN trainer_assignments ta ON ta.member_id = ws.member_id AND ta.status = 'ACTIVE'
+        JOIN trainers t ON t.id = ta.trainer_id
+        WHERE ws.member_id = #{memberId} AND DATE(ws.started_at) = #{workoutDate}
+          AND t.user_id = #{userId}
+    </delete>
+    <insert id="insertWorkoutSet">
+        INSERT INTO workout_sets(session_id, exercise_name, set_number, weight, reps, completed)
+        VALUES(#{sessionId}, #{exerciseName}, #{setNumber}, #{weight}, #{reps}, TRUE)
+    </insert>
+</mapper>

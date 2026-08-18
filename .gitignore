@@ -43,3 +43,4 @@ out/
 .env.*.localdlwp
 
 /.gradle-cache/
+/bootRun/

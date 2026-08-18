@@ -2,8 +2,8 @@ package com.acorn.gymmanagement.mypage.mapper;
 
 import com.acorn.gymmanagement.mypage.dto.response.*;
 import com.acorn.gymmanagement.mypage.form.MemberProfileForm;
-import com.acorn.gymmanagement.mypage.model.WorkoutSessionRegistration;
-import com.acorn.gymmanagement.mypage.model.WorkoutSetRegistration;
+import com.acorn.gymmanagement.workout.model.WorkoutSessionRegistration;
+import com.acorn.gymmanagement.workout.model.WorkoutSetRegistration;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
