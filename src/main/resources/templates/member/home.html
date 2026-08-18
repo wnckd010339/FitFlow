@@ -4,16 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>나의 FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/layouts/member.css}" href="/css/layouts/member.css">
     <link rel="stylesheet" th:href="@{/css/pages/member/home.css}" href="/css/pages/member/home.css">
 </head>
 <body>
-<header class="member-header">
-    <a class="brand" href="/member/home"><span>F</span>FitFlow</a>
-    <nav><a class="active" href="/member/home">홈</a><a href="/member/memberships">회원권</a><a href="/member/attendance">출석</a><a href="/member/workouts">운동</a><a href="/member/payments">결제 내역</a><a href="/member/profile">내 정보</a></nav>
-    <div class="member-profile"><button type="button" aria-label="알림">●</button><span th:text="${#strings.substring(home.summary.memberName, 0, 1)}">김</span><strong th:text="${home.summary.memberName}">김지훈</strong>
-        <form th:action="@{/logout}" action="/logout" method="post"><button type="submit">로그아웃</button></form>
-    </div>
-</header>
+<header th:replace="~{member/portal-fragments :: header('home')}"></header>
 
 <main class="member-main">
     <p class="member-notice success" th:if="${message}" th:text="${message}"></p>

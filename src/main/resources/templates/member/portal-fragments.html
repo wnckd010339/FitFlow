@@ -1,1 +1,21 @@
-<!DOCTYPE html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><body><header th:fragment="header(active)" class="portal-header"><a class="portal-brand" th:href="@{/member/home}"><span>F</span>FitFlow</a><nav><a th:href="@{/member/home}" th:classappend="${active=='home'}?'active'">홈</a><a th:href="@{/member/memberships}" th:classappend="${active=='memberships'}?'active'">회원권</a><a th:href="@{/member/attendance}" th:classappend="${active=='attendance'}?'active'">출석</a><a th:href="@{/member/workouts}" th:classappend="${active=='workouts'}?'active'">운동</a><a th:href="@{/member/payments}" th:classappend="${active=='payments'}?'active'">결제 내역</a><a th:href="@{/member/profile}" th:classappend="${active=='profile'}?'active'">내 정보</a></nav><form th:action="@{/logout}" method="post"><button>로그아웃</button></form></header></body></html>
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header(active)" class="portal-header">
+    <a class="portal-brand" th:href="@{/member/home}" aria-label="FitFlow 회원 홈"><span>F</span>FitFlow</a>
+    <button class="member-menu-toggle" type="button" aria-controls="member-navigation" aria-expanded="false" aria-label="메뉴 열기">
+        <span></span><span></span><span></span>
+    </button>
+    <nav id="member-navigation" aria-label="회원 메뉴">
+        <a th:href="@{/member/home}" th:classappend="${active=='home'}?'active'">홈</a>
+        <a th:href="@{/member/memberships}" th:classappend="${active=='memberships'}?'active'">회원권</a>
+        <a th:href="@{/member/attendance}" th:classappend="${active=='attendance'}?'active'">출석</a>
+        <a th:href="@{/member/workouts}" th:classappend="${active=='workouts'}?'active'">운동</a>
+        <a th:href="@{/member/payments}" th:classappend="${active=='payments'}?'active'">결제 내역</a>
+        <a th:href="@{/member/profile}" th:classappend="${active=='profile'}?'active'">내 정보</a>
+    </nav>
+    <form class="portal-logout" th:action="@{/logout}" method="post"><button>로그아웃</button></form>
+    <script th:src="@{/js/screens/member-navigation.js}"></script>
+</header>
+</body>
+</html>

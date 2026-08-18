@@ -11,11 +11,6 @@
 .order-result{padding:20px;border:1px solid #bfdcce;border-radius:14px;background:var(--mint)}.order-result[hidden]{display:none}.order-result>span,.order-result>strong,.order-result>small{display:block}.order-result>strong{margin:8px 0;font-size:12px;color:var(--green);word-break:break-all}.order-result p{margin:4px 0 8px;font-size:17px}.order-result small{color:var(--muted)}.order-result .order-countdown{margin-top:8px;color:var(--green);font-size:13px}.order-result .order-countdown b{font-size:16px}.order-result a{display:inline-block;margin-top:14px;font-weight:800;text-decoration:underline}.order-result.expired{border-color:#e4c8c3;background:#fff4f1}.order-result.expired>span,.order-result.expired .order-countdown{color:#a34135}.section-title{margin:0 0 15px;font-size:20px}
 .card-top b>span{padding:0;background:transparent;color:inherit}.card-top .status-pending_payment{background:#fff4cf;color:#826600}.card-top .status-active{background:#edf4d2;color:#52622c}.card-top .status-paused{background:#e7eff8;color:#355d82}.card-top .status-expired,.card-top .status-cancelled{background:#edf0ee;color:#71847d}
 @media(max-width:700px){
-    .portal-header{height:auto;min-height:76px;padding:12px 18px;flex-wrap:wrap;gap:8px}
-    .portal-brand{flex:1}
-    .portal-header nav{order:3;width:100%;overflow-x:auto;gap:2px;scrollbar-width:none}
-    .portal-header nav::-webkit-scrollbar{display:none}
-    .portal-header nav a{padding:10px 9px 8px;white-space:nowrap}
     .membership-order-form{grid-template-columns:1fr}
     .order-summary{grid-template-columns:1fr}
     .section-heading{align-items:flex-start}
