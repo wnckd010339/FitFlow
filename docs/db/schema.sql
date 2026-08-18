@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS routine_workout_groups;
 DROP TABLE IF EXISTS workout_routines;
 DROP TABLE IF EXISTS attendances;
 DROP TABLE IF EXISTS refunds;
+DROP TABLE IF EXISTS payment_orders;
 DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS member_memberships;
 DROP TABLE IF EXISTS membership_products;
@@ -357,10 +358,6 @@ CREATE TABLE equipment_maintenance_logs (
     CONSTRAINT ck_maintenance_type CHECK (maintenance_type IN ('CLEANING', 'INSPECTION', 'REPAIR')),
     INDEX ix_maintenance_equipment_date (equipment_id, performed_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-ALTER TABLE members
-    ADD COLUMN gender VARCHAR(20) NULL AFTER birth_date;
 -- 애플리케이션에서 추가로 보장할 규칙
 -- 1. 회원별 ACTIVE 트레이너 배정은 최대 1건
 -- 2. 회원별 checked_out_at IS NULL인 출석은 최대 1건

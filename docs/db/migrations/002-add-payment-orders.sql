@@ -1,7 +1,8 @@
 -- Existing FitFlow databases: add the member PG payment order table.
 -- Run after payments and member_memberships have been created.
+-- IF NOT EXISTS keeps local/dev deployments safe when the migration is run again.
 
-CREATE TABLE payment_orders (
+CREATE TABLE IF NOT EXISTS payment_orders (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_id VARCHAR(64) NOT NULL,
     member_id BIGINT NOT NULL,

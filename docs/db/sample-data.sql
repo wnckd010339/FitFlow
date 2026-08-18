@@ -1,4 +1,4 @@
--- schema-v2.sql 적용 후 실행하는 개발용 샘플 데이터
+-- docs/db/schema.sql 적용 후 실행하는 개발용 샘플 데이터
 -- 모든 로컬 샘플 계정의 비밀번호: password
 -- BCrypt 해시: $2a$10$vPQkIMlwttHC0vi1qqgBU.tTE105UeV7WryKN/LefQk3P9c8v1iHm
 -- 실제 운영 환경에서는 이 파일을 사용하지 않습니다.
