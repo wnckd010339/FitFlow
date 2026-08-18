@@ -1,1 +1,21 @@
-<!doctype html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" th:href="@{/css/screens/trainer-portal.css}"><title>운동 루틴 | FitFlow</title></head><body><header class="portal-header"><a class="brand" href="/trainer/home"><span>F</span>FitFlow</a><nav><a href="/trainer/home">홈</a><a href="/trainer/members">담당 회원</a><a class="active" href="/trainer/routines">운동 루틴</a><a href="/trainer/workouts">운동 기록</a><a href="/trainer/profile">내 프로필</a></nav><div class="portal-profile"><span class="avatar" th:text="${#strings.substring(headerProfile.name,0,1)}">김</span><div><strong th:text="${headerProfile.name+' 트레이너'}"></strong><small th:text="${headerProfile.specialty}"></small></div><form th:action="@{/logout}" method="post"><button>로그아웃</button></form></div></header><main class="portal-main"><div class="page-heading"><div><p class="eyebrow">WORKOUT ROUTINES</p><h1>운동 루틴</h1><p>같은 날 수행하는 여러 운동을 하나의 운동 구성으로 관리합니다.</p></div><a class="button" href="/trainer/routines/new">새 루틴 만들기</a></div><section class="card"><div class="toolbar"><form method="get"><select name="memberId"><option value="">전체 회원</option><option th:each="m:${members}" th:value="${m.memberId}" th:selected="${m.memberId==selectedMemberId}" th:text="${m.name}"></option></select><button>조회</button></form></div><table class="data-table"><thead><tr><th>회원</th><th>루틴</th><th>운동 구성</th><th>시작일</th><th></th></tr></thead><tbody><tr th:each="r:${routines}"><td th:text="${r.memberName}"></td><td th:text="${r.title}"></td><td><strong th:text="${r.workoutGroupTitle}"></strong><small style="display:block;color:#72817c;margin-top:4px" th:text="${r.exerciseCount+'종목'}"></small></td><td th:text="${r.startDate}"></td><td><a class="link" th:href="@{/trainer/routines/{id}/edit(id=${r.routineId})}">수정</a></td></tr><tr th:if="${#lists.isEmpty(routines)}"><td class="empty" colspan="5">등록된 운동 루틴이 없습니다.</td></tr></tbody></table></section></main></body></html>
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" th:href="@{/css/screens/trainer-portal.css}"><title>운동 루틴 | FitFlow</title>
+</head>
+<body>
+<header th:replace="~{trainer/fragments :: sidebar('routines', ${headerProfile})}"></header>
+<main class="portal-main">
+    <div class="page-heading"><div><p class="eyebrow">WORKOUT ROUTINES</p><h1>운동 루틴</h1><p>같은 날 수행하는 여러 운동을 하나의 운동 구성으로 관리합니다.</p></div><a class="button" href="/trainer/routines/new">새 루틴 만들기</a></div>
+    <section class="card">
+        <p class="notice" th:if="${message}" th:text="${message}"></p>
+        <div class="toolbar"><form method="get"><select name="memberId"><option value="">전체 회원</option><option th:each="m:${members}" th:value="${m.memberId}" th:selected="${m.memberId==selectedMemberId}" th:text="${m.name}"></option></select><button>조회</button></form></div>
+        <table class="data-table"><thead><tr><th>회원</th><th>루틴</th><th>운동 구성</th><th>시작일</th><th></th></tr></thead><tbody>
+        <tr th:each="r:${routines}"><td th:text="${r.memberName}"></td><td th:text="${r.title}"></td><td><strong th:text="${r.workoutGroupTitle}"></strong><small class="table-subtext" th:text="${r.exerciseCount+'종목'}"></small></td><td th:text="${r.startDate}"></td><td><div class="table-actions"><a class="action-button action-button--secondary" th:href="@{/trainer/routines/{id}/edit(id=${r.routineId})}">수정</a><form class="delete-form" method="post" th:action="@{/trainer/routines/{id}/delete(id=${r.routineId})}" data-confirm="이 운동 루틴을 삭제하시겠습니까?"><button class="action-button danger-button" type="submit">삭제</button></form></div></td></tr>
+        <tr th:if="${#lists.isEmpty(routines)}"><td class="empty" colspan="5">등록된 운동 루틴이 없습니다.</td></tr>
+        </tbody></table>
+    </section>
+</main>
+</body>
+</html>

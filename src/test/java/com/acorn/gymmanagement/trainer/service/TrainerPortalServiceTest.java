@@ -2,15 +2,20 @@ package com.acorn.gymmanagement.trainer.service;
 
 import com.acorn.gymmanagement.trainer.form.TrainerRoutineExerciseForm;
 import com.acorn.gymmanagement.trainer.form.TrainerRoutineForm;
+import com.acorn.gymmanagement.trainer.form.TrainerWorkoutExerciseForm;
+import com.acorn.gymmanagement.trainer.form.TrainerWorkoutForm;
 import com.acorn.gymmanagement.trainer.mapper.TrainerPortalMapper;
 import com.acorn.gymmanagement.trainer.model.TrainerRoutineExerciseRegistration;
+import com.acorn.gymmanagement.mypage.model.WorkoutSetRegistration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,16 +28,12 @@ class TrainerPortalServiceTest {
     @Mock TrainerPortalMapper mapper;
 
     @Test
-    void createRoutineStoresAllExercisesInOneWorkoutGroup() {
+    void createRoutineStoresAllExercisesWithoutRequiringWorkoutGroupMigration() {
         TrainerPortalService service = new TrainerPortalService(mapper);
         when(mapper.findTrainerId(10L)).thenReturn(Optional.of(20L));
         when(mapper.existsAssignedMember(20L, 30L)).thenReturn(true);
         when(mapper.insertRoutine(any())).thenAnswer(invocation -> {
             invocation.<com.acorn.gymmanagement.trainer.model.TrainerRoutineRegistration>getArgument(0).setRoutineId(40L);
-            return 1;
-        });
-        when(mapper.insertWorkoutGroup(any())).thenAnswer(invocation -> {
-            invocation.<com.acorn.gymmanagement.trainer.model.TrainerRoutineWorkoutGroupRegistration>getArgument(0).setWorkoutGroupId(50L);
             return 1;
         });
         when(mapper.insertRoutineExercise(any())).thenReturn(1);
@@ -52,6 +53,45 @@ class TrainerPortalServiceTest {
                 ArgumentCaptor.forClass(TrainerRoutineExerciseRegistration.class);
         verify(mapper, times(3)).insertRoutineExercise(captor.capture());
         assertEquals(List.of(1, 2, 3), captor.getAllValues().stream().map(TrainerRoutineExerciseRegistration::displayOrder).toList());
-        assertEquals(List.of(50L, 50L, 50L), captor.getAllValues().stream().map(TrainerRoutineExerciseRegistration::workoutGroupId).toList());
+        assertEquals(java.util.Arrays.asList(null, null, null), captor.getAllValues().stream().map(TrainerRoutineExerciseRegistration::workoutGroupId).toList());
+    }
+
+    @Test
+    void createWorkoutStoresEveryExerciseInOneSession() {
+        TrainerPortalService service = new TrainerPortalService(mapper);
+        when(mapper.findTrainerId(10L)).thenReturn(Optional.of(20L));
+        when(mapper.existsAssignedMember(20L, 30L)).thenReturn(true);
+        when(mapper.insertWorkoutSession(any())).thenAnswer(invocation -> {
+            invocation.<com.acorn.gymmanagement.mypage.model.WorkoutSessionRegistration>getArgument(0).setSessionId(40L);
+            return 1;
+        });
+        when(mapper.insertWorkoutSet(any())).thenReturn(1);
+        TrainerWorkoutForm form = new TrainerWorkoutForm(
+                30L, 50L, 70, "하체와 가슴 운동",
+                List.of(
+                        new TrainerWorkoutExerciseForm("백 스쿼트", 4, new BigDecimal("80.00"), 10),
+                        new TrainerWorkoutExerciseForm("벤치 프레스", 3, new BigDecimal("60.00"), 8)));
+
+        service.createWorkout(10L, form);
+
+        ArgumentCaptor<WorkoutSetRegistration> captor = ArgumentCaptor.forClass(WorkoutSetRegistration.class);
+        verify(mapper, times(7)).insertWorkoutSet(captor.capture());
+        assertEquals(List.of("백 스쿼트", "백 스쿼트", "백 스쿼트", "백 스쿼트", "벤치 프레스", "벤치 프레스", "벤치 프레스"),
+                captor.getAllValues().stream().map(WorkoutSetRegistration::exerciseName).toList());
+    }
+
+    @Test
+    void deleteWorkoutDayRemovesSetsBeforeSessions() {
+        TrainerPortalService service = new TrainerPortalService(mapper);
+        LocalDate date = LocalDate.of(2026, 8, 13);
+        when(mapper.findTrainerId(10L)).thenReturn(Optional.of(20L));
+        when(mapper.existsAssignedMember(20L, 30L)).thenReturn(true);
+        when(mapper.deleteWorkoutSessionsByDate(10L, 30L, date)).thenReturn(2);
+
+        service.deleteWorkoutDay(10L, 30L, date);
+
+        InOrder order = inOrder(mapper);
+        order.verify(mapper).deleteWorkoutSetsByDate(10L, 30L, date);
+        order.verify(mapper).deleteWorkoutSessionsByDate(10L, 30L, date);
     }
 }

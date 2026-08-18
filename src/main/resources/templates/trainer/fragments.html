@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="portal-header" th:fragment="sidebar(active, profile)">
+    <a class="brand" th:href="@{/trainer/home}"><span>F</span>FitFlow</a>
+    <button class="sidebar-toggle" type="button" aria-controls="trainer-navigation" aria-expanded="false" aria-label="메뉴 열기"><span></span><span></span><span></span></button>
+    <nav id="trainer-navigation">
+        <a th:href="@{/trainer/home}" th:classappend="${active == 'home'} ? 'active'">홈</a>
+        <a th:href="@{/trainer/members}" th:classappend="${active == 'members'} ? 'active'">담당 회원</a>
+        <a th:href="@{/trainer/routines}" th:classappend="${active == 'routines'} ? 'active'">운동 루틴</a>
+        <a th:href="@{/trainer/workouts}" th:classappend="${active == 'workouts'} ? 'active'">운동 기록</a>
+        <a th:href="@{/trainer/profile}" th:classappend="${active == 'profile'} ? 'active'">내 프로필</a>
+    </nav>
+    <div class="portal-profile">
+        <span class="avatar" th:text="${#strings.substring(profile.name, 0, 1)}">김</span>
+        <div>
+            <strong th:text="${profile.name + ' 트레이너'}">트레이너</strong>
+            <small th:text="${profile.specialty}">전문 분야</small>
+        </div>
+        <form th:action="@{/logout}" method="post"><button>로그아웃</button></form>
+    </div>
+    <script th:src="@{/js/screens/trainer-sidebar.js}"></script>
+</header>
+</body>
+</html>

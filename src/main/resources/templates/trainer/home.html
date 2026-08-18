@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>트레이너 홈 | FitFlow</title>
+    <link rel="stylesheet" th:href="@{/css/screens/trainer-portal.css}" href="/css/screens/trainer-portal.css">
     <link rel="stylesheet" th:href="@{/css/screens/trainer-home.css}" href="/css/screens/trainer-home.css">
 </head>
 <body>
-<header class="trainer-header">
-    <a class="brand" th:href="@{/trainer/home}" href="/trainer/home"><span>F</span>FitFlow <small>TRAINER</small></a>
-    <nav><a class="active" th:href="@{/trainer/home}" href="/trainer/home">홈</a><a th:href="@{/trainer/members}" href="/trainer/members">담당 회원</a><a th:href="@{/trainer/routines}" href="/trainer/routines">운동 루틴</a><a th:href="@{/trainer/workouts}" href="/trainer/workouts">운동 기록</a><a th:href="@{/trainer/profile}" href="/trainer/profile">내 프로필</a></nav>
-    <div class="profile"><span th:text="${#strings.substring(profile.name, 0, 1)}">김</span><div><strong th:text="${profile.name + ' 트레이너'}">김도윤 트레이너</strong><small th:text="${profile.specialty}">근력 향상</small></div><form th:action="@{/logout}" action="/logout" method="post"><button>로그아웃</button></form></div>
-</header>
-<main class="trainer-main">
+<header th:replace="~{trainer/fragments :: sidebar('home', ${profile})}"></header>
+<main class="portal-main trainer-main">
     <section class="welcome"><div><p>TRAINER HOME</p><h1 th:text="${profile.name + ' 트레이너님, 안녕하세요!'}">김도윤 트레이너님, 안녕하세요!</h1><span>담당 회원의 루틴과 최근 운동 기록을 확인해 보세요.</span></div></section>
     <section class="trainer-metrics">
         <article><span>담당 회원</span><strong th:text="${profile.assignedMemberCount}">0</strong><p>현재 활성 배정 기준</p></article>

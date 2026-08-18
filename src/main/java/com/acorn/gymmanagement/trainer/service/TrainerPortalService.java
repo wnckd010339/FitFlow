@@ -9,7 +9,6 @@ import com.acorn.gymmanagement.trainer.form.*;
 import com.acorn.gymmanagement.trainer.mapper.TrainerPortalMapper;
 import com.acorn.gymmanagement.trainer.model.TrainerRoutineExerciseRegistration;
 import com.acorn.gymmanagement.trainer.model.TrainerRoutineRegistration;
-import com.acorn.gymmanagement.trainer.model.TrainerRoutineWorkoutGroupRegistration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +23,8 @@ public class TrainerPortalService {
     public TrainerMemberDetailView member(Long userId, Long memberId) { assertAssignedMember(userId, memberId); return mapper.findMemberDetail(userId, memberId).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "회원 정보를 찾을 수 없습니다.")); }
     public List<TrainerAttendanceView> attendances(Long userId, Long memberId) { assertAssignedMember(userId, memberId); return mapper.findAttendances(memberId); }
     public List<TrainerWorkoutView> workouts(Long userId, Long memberId) { if (memberId != null) assertAssignedMember(userId, memberId); return mapper.findWorkouts(userId, memberId); }
+    public List<TrainerWorkoutDayView> workoutDays(Long userId, Long memberId) { if (memberId != null) assertAssignedMember(userId, memberId); return mapper.findWorkoutDays(userId, memberId); }
+    public List<TrainerWorkoutView> workoutsByDate(Long userId, Long memberId, java.time.LocalDate workoutDate) { assertAssignedMember(userId, memberId); return mapper.findWorkoutsByDate(userId, memberId, workoutDate); }
     public List<TrainerRoutineView> routines(Long userId, Long memberId) { if (memberId != null) assertAssignedMember(userId, memberId); return mapper.findRoutines(userId, memberId); }
     public TrainerRoutineView routine(Long userId, Long routineId) { return mapper.findRoutine(userId, routineId).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "루틴을 찾을 수 없습니다.")); }
     public List<TrainerRoutineExerciseView> routineExercises(Long userId, Long routineId) {
@@ -31,7 +32,22 @@ public class TrainerPortalService {
         return mapper.findRoutineExercises(routineId, routine.workoutGroupId());
     }
     public TrainerWorkoutView workout(Long userId, Long sessionId) { return mapper.findWorkout(userId, sessionId).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "운동 기록을 찾을 수 없습니다.")); }
+    public List<TrainerWorkoutExerciseView> workoutExercises(Long userId, Long sessionId) { workout(userId, sessionId); return mapper.findWorkoutExercises(userId, sessionId); }
     @Transactional public void updateProfile(Long userId, TrainerProfileForm form) { if (mapper.updateProfile(userId, new TrainerProfileForm(form.name().trim(), normalizePhone(form.phone()), blankToNull(form.specialty()))) != 1) throw new BusinessException(ErrorCode.NOT_FOUND, "수정할 트레이너 정보를 찾을 수 없습니다."); }
+    @Transactional public void deleteRoutine(Long userId, Long routineId) {
+        routine(userId, routineId);
+        if (mapper.cancelRoutine(userId, routineId) != 1) throw new BusinessException(ErrorCode.CONFLICT, "운동 루틴을 삭제하지 못했습니다.");
+    }
+    @Transactional public void deleteWorkout(Long userId, Long sessionId) {
+        workout(userId, sessionId);
+        mapper.deleteWorkoutSets(sessionId);
+        if (mapper.deleteWorkoutSession(userId, sessionId) != 1) throw new BusinessException(ErrorCode.CONFLICT, "운동 기록을 삭제하지 못했습니다.");
+    }
+    @Transactional public void deleteWorkoutDay(Long userId, Long memberId, java.time.LocalDate workoutDate) {
+        assertAssignedMember(userId, memberId);
+        mapper.deleteWorkoutSetsByDate(userId, memberId, workoutDate);
+        if (mapper.deleteWorkoutSessionsByDate(userId, memberId, workoutDate) < 1) throw new BusinessException(ErrorCode.NOT_FOUND, "삭제할 운동 기록을 찾을 수 없습니다.");
+    }
     @Transactional
     public void createRoutine(Long userId, TrainerRoutineForm form) {
         validateRoutineForm(form);
@@ -43,11 +59,7 @@ public class TrainerPortalService {
         if (mapper.insertRoutine(routine) != 1) {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "루틴을 등록하지 못했습니다.");
         }
-        TrainerRoutineWorkoutGroupRegistration group = workoutGroup(routine.getRoutineId(), form);
-        if (mapper.insertWorkoutGroup(group) != 1) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "운동 구성을 등록하지 못했습니다.");
-        }
-        saveExercises(routine.getRoutineId(), group.getWorkoutGroupId(), form);
+        saveExercises(routine.getRoutineId(), null, form);
     }
 
     @Transactional
@@ -67,23 +79,10 @@ public class TrainerPortalService {
             throw new BusinessException(ErrorCode.CONFLICT, "루틴을 수정하지 못했습니다.");
         }
         mapper.deleteRoutineExercises(routineId);
-        TrainerRoutineWorkoutGroupRegistration group = workoutGroup(routineId, form);
-        if (current.workoutGroupId() == null) {
-            mapper.insertWorkoutGroup(group);
-        } else {
-            group.setWorkoutGroupId(current.workoutGroupId());
-            if (mapper.updateWorkoutGroup(group) != 1) {
-                throw new BusinessException(ErrorCode.CONFLICT, "운동 구성을 수정하지 못했습니다.");
-            }
-        }
-        saveExercises(routineId, group.getWorkoutGroupId(), form);
+        saveExercises(routineId, null, form);
     }
-    @Transactional public void createWorkout(Long userId, TrainerWorkoutForm form) { assertAssignedMember(userId,form.memberId()); LocalDateTime now=LocalDateTime.now(); WorkoutSessionRegistration s=new WorkoutSessionRegistration(form.memberId(),form.routineId(),now.minusMinutes(form.durationMinutes()),now,blankToNull(form.memo())); mapper.insertWorkoutSession(s); saveSets(s.getSessionId(),form); }
-    @Transactional public void updateWorkout(Long userId, Long sessionId, TrainerWorkoutForm form) { TrainerWorkoutView current=workout(userId,sessionId); assertAssignedMember(userId,form.memberId()); if(!current.memberId().equals(form.memberId())) throw new BusinessException(ErrorCode.CONFLICT,"운동 기록의 회원은 변경할 수 없습니다."); LocalDateTime started=current.startedAt(); WorkoutSessionRegistration s=new WorkoutSessionRegistration(sessionId,form.memberId(),form.routineId(),started,started.plusMinutes(form.durationMinutes()),blankToNull(form.memo())); if(mapper.updateWorkoutSession(s)!=1) throw new BusinessException(ErrorCode.CONFLICT,"운동 기록을 수정하지 못했습니다."); mapper.deleteWorkoutSets(sessionId); saveSets(sessionId,form); }
-    private TrainerRoutineWorkoutGroupRegistration workoutGroup(Long routineId, TrainerRoutineForm form) {
-        return new TrainerRoutineWorkoutGroupRegistration(routineId, form.getWorkoutGroupTitle().trim(),
-                form.getWeekNumber(), form.getDayOfWeek(), 1);
-    }
+    @Transactional public void createWorkout(Long userId, TrainerWorkoutForm form) { assertAssignedMember(userId,form.getMemberId()); LocalDateTime now=LocalDateTime.now(); WorkoutSessionRegistration s=new WorkoutSessionRegistration(form.getMemberId(),form.getRoutineId(),now.minusMinutes(form.getDurationMinutes()),now,blankToNull(form.getMemo())); if(mapper.insertWorkoutSession(s)!=1) throw new BusinessException(ErrorCode.INTERNAL_ERROR,"운동 기록을 저장하지 못했습니다."); saveSets(s.getSessionId(),form); }
+    @Transactional public void updateWorkout(Long userId, Long sessionId, TrainerWorkoutForm form) { TrainerWorkoutView current=workout(userId,sessionId); assertAssignedMember(userId,form.getMemberId()); if(!current.memberId().equals(form.getMemberId())) throw new BusinessException(ErrorCode.CONFLICT,"운동 기록의 회원은 변경할 수 없습니다."); LocalDateTime started=current.startedAt(); WorkoutSessionRegistration s=new WorkoutSessionRegistration(sessionId,form.getMemberId(),form.getRoutineId(),started,started.plusMinutes(form.getDurationMinutes()),blankToNull(form.getMemo())); if(mapper.updateWorkoutSession(s)!=1) throw new BusinessException(ErrorCode.CONFLICT,"운동 기록을 수정하지 못했습니다."); mapper.deleteWorkoutSets(sessionId); saveSets(sessionId,form); }
     private void saveExercises(Long routineId, Long workoutGroupId, TrainerRoutineForm form) {
         for (int index = 0; index < form.getExercises().size(); index++) {
             TrainerRoutineExerciseForm exercise = form.getExercises().get(index);
@@ -107,7 +106,16 @@ public class TrainerPortalService {
             }
         }
     }
-    private void saveSets(Long sessionId, TrainerWorkoutForm f) { for(int n=1;n<=f.sets();n++) mapper.insertWorkoutSet(new WorkoutSetRegistration(sessionId,f.exerciseName().trim(),n,f.weight(),f.reps())); }
+    private void saveSets(Long sessionId, TrainerWorkoutForm form) {
+        for (TrainerWorkoutExerciseForm exercise : form.getExercises()) {
+            for (int setNumber = 1; setNumber <= exercise.getSets(); setNumber++) {
+                int inserted = mapper.insertWorkoutSet(new WorkoutSetRegistration(
+                        sessionId, exercise.getExerciseName().trim(), setNumber,
+                        exercise.getWeight(), exercise.getReps()));
+                if (inserted != 1) throw new BusinessException(ErrorCode.INTERNAL_ERROR,"운동 세트를 저장하지 못했습니다.");
+            }
+        }
+    }
     private Long trainerId(Long userId) { return mapper.findTrainerId(userId).orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND,"트레이너 정보를 찾을 수 없습니다.")); }
     private void assertAssignedMember(Long userId, Long memberId) { assertAssignedMemberByTrainerId(trainerId(userId),memberId); }
     private void assertAssignedMemberByTrainerId(Long trainerId, Long memberId) { if(!mapper.existsAssignedMember(trainerId,memberId)) throw new BusinessException(ErrorCode.FORBIDDEN,"담당 회원만 조회하거나 수정할 수 있습니다."); }

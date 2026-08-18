@@ -4,15 +4,16 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.AssertTrue;
 import java.math.BigDecimal;
 
 public class TrainerRoutineExerciseForm {
     @NotBlank(message="운동 종목을 입력해 주세요.") private String exerciseName;
-    @NotNull(message="목표 세트를 입력해 주세요.") @Min(1) @Max(20) private Integer targetSets;
-    @Min(0) private Integer targetRepsMin;
-    @Min(0) private Integer targetRepsMax;
-    @Min(0) private BigDecimal targetWeight;
-    @Min(0) @Max(3600) private Integer restSeconds;
+    @NotNull(message="목표 세트를 입력해 주세요.") @Min(value=1,message="목표 세트는 1 이상이어야 합니다.") @Max(value=20,message="목표 세트는 20 이하여야 합니다.") private Integer targetSets;
+    @Min(value=0,message="최소 반복 횟수는 0 이상이어야 합니다.") private Integer targetRepsMin;
+    @Min(value=0,message="최대 반복 횟수는 0 이상이어야 합니다.") private Integer targetRepsMax;
+    @Min(value=0,message="목표 중량은 0 이상이어야 합니다.") private BigDecimal targetWeight;
+    @Min(value=0,message="휴식 시간은 0 이상이어야 합니다.") @Max(value=3600,message="휴식 시간은 3600초 이하여야 합니다.") private Integer restSeconds;
     private String memo;
 
     public TrainerRoutineExerciseForm() { }
@@ -28,4 +29,6 @@ public class TrainerRoutineExerciseForm {
     public BigDecimal getTargetWeight(){return targetWeight;} public void setTargetWeight(BigDecimal v){targetWeight=v;}
     public Integer getRestSeconds(){return restSeconds;} public void setRestSeconds(Integer v){restSeconds=v;}
     public String getMemo(){return memo;} public void setMemo(String v){memo=v;}
+    @AssertTrue(message="최대 반복 횟수는 최소 반복 횟수 이상이어야 합니다.")
+    public boolean isRepetitionRangeValid(){return targetRepsMin==null||targetRepsMax==null||targetRepsMax>=targetRepsMin;}
 }

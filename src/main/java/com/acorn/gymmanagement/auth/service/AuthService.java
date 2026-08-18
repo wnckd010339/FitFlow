@@ -43,7 +43,7 @@ public class AuthService {
                 user.userId(),
                 user.loginId(),
                 user.email(),
-                user.role()
+                normalizeRole(user.role())
         );
 
         sessionService.saveUser(session, sessionUser);
@@ -54,5 +54,9 @@ public class AuthService {
                 ErrorCode.AUTH_INVALID_CREDENTIALS,
                 INVALID_CREDENTIALS_MESSAGE
         );
+    }
+
+    private String normalizeRole(String role) {
+        return role != null && role.startsWith("ROLE_") ? role.substring(5) : role;
     }
 }

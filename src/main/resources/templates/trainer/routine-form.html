@@ -7,28 +7,25 @@
     <title>루틴 저장 | FitFlow</title>
 </head>
 <body>
-<header class="portal-header">
-    <a class="brand" href="/trainer/home"><span>F</span>FitFlow</a>
-    <nav><a href="/trainer/home">홈</a><a href="/trainer/members">담당 회원</a><a class="active" href="/trainer/routines">운동 루틴</a><a href="/trainer/workouts">운동 기록</a><a href="/trainer/profile">내 프로필</a></nav>
-    <div class="portal-profile"><span class="avatar" th:text="${#strings.substring(headerProfile.name,0,1)}">김</span><div><strong th:text="${headerProfile.name+' 트레이너'}"></strong><small th:text="${headerProfile.specialty}"></small></div><form th:action="@{/logout}" method="post"><button>로그아웃</button></form></div>
-</header>
+<header th:replace="~{trainer/fragments :: sidebar('routines', ${headerProfile})}"></header>
 <main class="portal-main">
     <a class="back-link" href="/trainer/routines">← 운동 루틴</a>
     <form class="routine-editor" th:action="${routineId==null?'/trainer/routines':'/trainer/routines/'+routineId}" method="post" th:object="${routineForm}">
+        <p class="form-error" th:if="${#fields.hasGlobalErrors()}" th:each="error:${#fields.globalErrors()}" th:text="${error}"></p>
         <section class="card routine-card">
             <div class="page-heading"><div><p class="eyebrow">ROUTINE</p><h1 th:text="${routineId==null?'새 루틴 만들기':'루틴 수정'}"></h1><p>루틴 정보는 한 번만 입력하고, 아래에 실제 운동들을 추가합니다.</p></div></div>
             <div class="form-grid">
-                <div class="field"><label>회원</label><select th:field="*{memberId}"><option value="">회원 선택</option><option th:each="m:${members}" th:value="${m.memberId}" th:text="${m.name}"></option></select></div>
-                <div class="field"><label>루틴 제목</label><input th:field="*{title}" placeholder="예: 4주 근력 향상 프로그램"></div>
+                <div class="field"><label>회원</label><select th:field="*{memberId}"><option value="">회원 선택</option><option th:each="m:${members}" th:value="${m.memberId}" th:text="${m.name}"></option></select><p class="field-error" th:errors="*{memberId}"></p></div>
+                <div class="field"><label>루틴 제목</label><input th:field="*{title}" placeholder="예: 4주 근력 향상 프로그램"><p class="field-error" th:errors="*{title}"></p></div>
                 <div class="field wide"><label>설명</label><textarea th:field="*{description}" placeholder="운동 목표 및 유의사항"></textarea></div>
-                <div class="field"><label>시작일</label><input type="date" th:field="*{startDate}"></div>
-                <div class="field"><label>종료일</label><input type="date" th:field="*{endDate}"></div>
+                <div class="field"><label>시작일</label><input type="date" th:field="*{startDate}"><p class="field-error" th:errors="*{startDate}"></p></div>
+                <div class="field"><label>종료일</label><input type="date" th:field="*{endDate}"><p class="field-error" th:errors="*{periodValid}"></p></div>
             </div>
         </section>
         <section class="card routine-card workout-group-card">
             <div class="group-heading"><div><p class="eyebrow">WORKOUT GROUP</p><h2>운동 구성</h2><p>같은 날 함께 수행할 운동을 하나의 구성으로 묶습니다.</p></div></div>
             <div class="form-grid group-fields">
-                <div class="field wide"><label>운동 구성명</label><input th:field="*{workoutGroupTitle}" placeholder="예: 1주차 하체"></div>
+                <div class="field wide"><label>운동 구성명</label><input th:field="*{workoutGroupTitle}" placeholder="예: 1주차 하체"><p class="field-error" th:errors="*{workoutGroupTitle}"></p></div>
                 <div class="field"><label>주차</label><input type="number" min="1" th:field="*{weekNumber}" placeholder="예: 1"></div>
                 <div class="field"><label>요일</label><select th:field="*{dayOfWeek}"><option value="">요일 미지정</option><option value="1">월요일</option><option value="2">화요일</option><option value="3">수요일</option><option value="4">목요일</option><option value="5">금요일</option><option value="6">토요일</option><option value="7">일요일</option></select></div>
             </div>
@@ -36,13 +33,14 @@
             <div id="exercise-list">
                 <article class="exercise-card" th:each="exercise,stat:*{exercises}">
                     <div class="exercise-title"><strong th:text="${'운동 '+(stat.index+1)}">운동 1</strong><button class="remove-exercise" type="button">삭제</button></div>
+                    <p class="field-error" th:errors="*{exercises[__${stat.index}__].repetitionRangeValid}"></p>
                     <div class="exercise-grid">
-                        <div class="field exercise-name"><label>운동 종목</label><input th:field="*{exercises[__${stat.index}__].exerciseName}" placeholder="예: 백 스쿼트"></div>
-                        <div class="field"><label>목표 세트</label><input type="number" min="1" max="20" th:field="*{exercises[__${stat.index}__].targetSets}"></div>
-                        <div class="field"><label>최소 반복</label><input type="number" min="0" th:field="*{exercises[__${stat.index}__].targetRepsMin}"></div>
-                        <div class="field"><label>최대 반복</label><input type="number" min="0" th:field="*{exercises[__${stat.index}__].targetRepsMax}"></div>
-                        <div class="field"><label>목표 중량(kg)</label><input type="number" min="0" step="0.5" th:field="*{exercises[__${stat.index}__].targetWeight}"></div>
-                        <div class="field"><label>휴식 시간(초)</label><input type="number" min="0" max="3600" th:field="*{exercises[__${stat.index}__].restSeconds}"></div>
+                        <div class="field exercise-name"><label>운동 종목</label><input th:field="*{exercises[__${stat.index}__].exerciseName}" placeholder="예: 백 스쿼트"><p class="field-error" th:errors="*{exercises[__${stat.index}__].exerciseName}"></p></div>
+                        <div class="field"><label>목표 세트</label><input type="number" min="1" max="20" th:field="*{exercises[__${stat.index}__].targetSets}"><p class="field-error" th:errors="*{exercises[__${stat.index}__].targetSets}"></p></div>
+                        <div class="field"><label>최소 반복</label><input type="number" min="0" th:field="*{exercises[__${stat.index}__].targetRepsMin}"><p class="field-error" th:errors="*{exercises[__${stat.index}__].targetRepsMin}"></p></div>
+                        <div class="field"><label>최대 반복</label><input type="number" min="0" th:field="*{exercises[__${stat.index}__].targetRepsMax}"><p class="field-error" th:errors="*{exercises[__${stat.index}__].targetRepsMax}"></p></div>
+                        <div class="field"><label>목표 중량(kg)</label><input type="number" min="0" step="0.5" th:field="*{exercises[__${stat.index}__].targetWeight}"><p class="field-error" th:errors="*{exercises[__${stat.index}__].targetWeight}"></p></div>
+                        <div class="field"><label>휴식 시간(초)</label><input type="number" min="0" max="3600" th:field="*{exercises[__${stat.index}__].restSeconds}"><p class="field-error" th:errors="*{exercises[__${stat.index}__].restSeconds}"></p></div>
                         <div class="field exercise-memo"><label>메모</label><input th:field="*{exercises[__${stat.index}__].memo}" placeholder="자세 또는 주의사항"></div>
                     </div>
                 </article>

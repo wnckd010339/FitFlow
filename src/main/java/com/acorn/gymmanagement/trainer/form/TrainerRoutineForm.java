@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.AssertTrue;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,4 +38,6 @@ public class TrainerRoutineForm {
     public Integer getWeekNumber(){return weekNumber;} public void setWeekNumber(Integer v){weekNumber=v;}
     public Integer getDayOfWeek(){return dayOfWeek;} public void setDayOfWeek(Integer v){dayOfWeek=v;}
     public List<TrainerRoutineExerciseForm> getExercises(){return exercises;} public void setExercises(List<TrainerRoutineExerciseForm> v){exercises=v;}
+    @AssertTrue(message = "종료일은 시작일보다 빠를 수 없습니다.")
+    public boolean isPeriodValid(){return startDate==null||endDate==null||!endDate.isBefore(startDate);}
 }

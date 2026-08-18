@@ -4,7 +4,6 @@ import com.acorn.gymmanagement.trainer.dto.response.*;
 import com.acorn.gymmanagement.trainer.form.TrainerProfileForm;
 import com.acorn.gymmanagement.trainer.model.TrainerRoutineExerciseRegistration;
 import com.acorn.gymmanagement.trainer.model.TrainerRoutineRegistration;
-import com.acorn.gymmanagement.trainer.model.TrainerRoutineWorkoutGroupRegistration;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
@@ -20,19 +19,29 @@ public interface TrainerPortalMapper {
     Optional<TrainerMemberDetailView> findMemberDetail(@Param("userId") Long userId, @Param("memberId") Long memberId);
     List<TrainerAttendanceView> findAttendances(@Param("memberId") Long memberId);
     List<TrainerWorkoutView> findWorkouts(@Param("userId") Long userId, @Param("memberId") Long memberId);
+    List<TrainerWorkoutDayView> findWorkoutDays(@Param("userId") Long userId, @Param("memberId") Long memberId);
+    List<TrainerWorkoutView> findWorkoutsByDate(@Param("userId") Long userId,
+                                                @Param("memberId") Long memberId,
+                                                @Param("workoutDate") java.time.LocalDate workoutDate);
     List<TrainerRoutineView> findRoutines(@Param("userId") Long userId, @Param("memberId") Long memberId);
     Optional<TrainerRoutineView> findRoutine(@Param("userId") Long userId, @Param("routineId") Long routineId);
     List<TrainerRoutineExerciseView> findRoutineExercises(@Param("routineId") Long routineId,
                                                           @Param("workoutGroupId") Long workoutGroupId);
     int insertRoutine(TrainerRoutineRegistration registration);
     int updateRoutine(TrainerRoutineRegistration registration);
-    int insertWorkoutGroup(TrainerRoutineWorkoutGroupRegistration registration);
-    int updateWorkoutGroup(TrainerRoutineWorkoutGroupRegistration registration);
+    int cancelRoutine(@Param("userId") Long userId, @Param("routineId") Long routineId);
     int deleteRoutineExercises(@Param("routineId") Long routineId);
     int insertRoutineExercise(TrainerRoutineExerciseRegistration registration);
     Optional<TrainerWorkoutView> findWorkout(@Param("userId") Long userId, @Param("sessionId") Long sessionId);
+    List<TrainerWorkoutExerciseView> findWorkoutExercises(@Param("userId") Long userId,
+                                                          @Param("sessionId") Long sessionId);
     int insertWorkoutSession(com.acorn.gymmanagement.mypage.model.WorkoutSessionRegistration registration);
     int updateWorkoutSession(com.acorn.gymmanagement.mypage.model.WorkoutSessionRegistration registration);
     int deleteWorkoutSets(@Param("sessionId") Long sessionId);
+    int deleteWorkoutSession(@Param("userId") Long userId, @Param("sessionId") Long sessionId);
+    int deleteWorkoutSetsByDate(@Param("userId") Long userId, @Param("memberId") Long memberId,
+                                @Param("workoutDate") java.time.LocalDate workoutDate);
+    int deleteWorkoutSessionsByDate(@Param("userId") Long userId, @Param("memberId") Long memberId,
+                                    @Param("workoutDate") java.time.LocalDate workoutDate);
     int insertWorkoutSet(com.acorn.gymmanagement.mypage.model.WorkoutSetRegistration registration);
 }
