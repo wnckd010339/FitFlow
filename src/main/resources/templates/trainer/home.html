@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>트레이너 홈 | FitFlow</title>
-    <link rel="stylesheet" th:href="@{/css/screens/trainer-portal.css}" href="/css/screens/trainer-portal.css">
-    <link rel="stylesheet" th:href="@{/css/screens/trainer-home.css}" href="/css/screens/trainer-home.css">
+    <link rel="stylesheet" th:href="@{/css/layouts/trainer.css}" href="/css/layouts/trainer.css">
+    <link rel="stylesheet" th:href="@{/css/layouts/trainer-sidebar.css}" href="/css/layouts/trainer-sidebar.css">
+    <link rel="stylesheet" th:href="@{/css/pages/trainer/home.css}" href="/css/pages/trainer/home.css">
 </head>
 <body>
 <header th:replace="~{trainer/fragments :: sidebar('home', ${profile})}"></header>
