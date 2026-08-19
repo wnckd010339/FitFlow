@@ -13,6 +13,7 @@ import com.acorn.gymmanagement.payment.service.PaymentService;
 import com.acorn.gymmanagement.facility.service.FacilityService;
 import com.acorn.gymmanagement.facility.dto.response.FacilitySummaryResponse;
 import com.acorn.gymmanagement.mypage.service.MemberPortalService;
+import com.acorn.gymmanagement.mypage.service.MemberWorkoutService;
 import com.acorn.gymmanagement.mypage.dto.response.MemberProfileView;
 import com.acorn.gymmanagement.trainer.dto.response.TrainerHomeProfileResponse;
 import com.acorn.gymmanagement.trainer.service.TrainerAdminService;
@@ -67,6 +68,9 @@ class SecurityAccessTest {
     private MemberPortalService memberPortalService;
 
     @MockitoBean
+    private MemberWorkoutService memberWorkoutService;
+
+    @MockitoBean
     private MembershipService membershipService;
 
     @MockitoBean
@@ -110,6 +114,8 @@ class SecurityAccessTest {
                 "tester@fitflow.com", "ACTIVE", 10, 3, 5
         ));
         when(membershipService.findActiveProducts()).thenReturn(List.of());
+        when(memberWorkoutService.routine(1L)).thenReturn(List.of());
+        when(memberWorkoutService.workoutDays(1L)).thenReturn(List.of());
         when(membershipService.findAllProducts()).thenReturn(List.of());
         when(paymentService.findActiveMembers()).thenReturn(List.of());
         when(facilityService.getSummary()).thenReturn(new FacilitySummaryResponse(0, 0, 0, 0));

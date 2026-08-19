@@ -23,6 +23,7 @@
   .member-grid{grid-template-columns:1fr}
   .activity{grid-column:auto}
 }
+.routine li > a { padding:6px 10px; color:#467165; background:#e7f3ef; border-radius:7px; font-size:8px; font-weight:700; }
 
 @media(max-width:480px){
   .member-main{width:calc(100% - 22px);padding-top:18px}

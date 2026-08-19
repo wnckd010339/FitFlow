@@ -22,12 +22,12 @@ import static org.mockito.Mockito.*;
 
 class MemberPortalServiceWorkoutTest {
     private MemberPortalMapper mapper;
-    private MemberPortalService service;
+    private MemberWorkoutService service;
 
     @BeforeEach
     void setUp() {
         mapper = mock(MemberPortalMapper.class);
-        service = new MemberPortalService(mapper);
+        service = new MemberWorkoutService(mapper);
     }
 
     @Test
@@ -44,7 +44,7 @@ class MemberPortalServiceWorkoutTest {
                 new WorkoutExerciseForm("레그 익스텐션", 3, new BigDecimal("35.0"), 12)
         ));
 
-        service.saveWorkout(10L, form);
+        service.save(10L, form);
 
         var captor = ArgumentCaptor.forClass(WorkoutSetRegistration.class);
         verify(mapper, times(5)).insertWorkoutSet(captor.capture());
@@ -68,7 +68,7 @@ class MemberPortalServiceWorkoutTest {
                 new WorkoutExerciseForm("벤치 프레스", 2, new BigDecimal("60.0"), 8)
         ));
 
-        service.updateWorkout(10L, 30L, form);
+        service.update(10L, 30L, form);
 
         var sessionCaptor = ArgumentCaptor.forClass(WorkoutSessionRegistration.class);
         verify(mapper).updateWorkoutSession(sessionCaptor.capture());
@@ -83,7 +83,7 @@ class MemberPortalServiceWorkoutTest {
         LocalDate date = LocalDate.of(2026, 8, 13);
         when(mapper.deleteWorkoutSessionsByDate(10L, date)).thenReturn(2);
 
-        service.deleteWorkoutDay(10L, date);
+        service.deleteDay(10L, date);
 
         var order = inOrder(mapper);
         order.verify(mapper).deleteWorkoutSetsByDate(10L, date);

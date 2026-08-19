@@ -222,7 +222,7 @@ public class MembershipService {
             LocalDate startDate
     ) {
         Long memberId = membershipMapper
-                .findActiveMemberIdByUserId(userId)
+                .findActiveMemberIdByUserIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.NOT_FOUND,
                         "활성 회원 정보를 찾을 수 없습니다."

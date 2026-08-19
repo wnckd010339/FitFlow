@@ -27,6 +27,8 @@ public interface MembershipMapper {
             @Param("userId") Long userId
     );
 
+    Optional<Long> findActiveMemberIdByUserIdForUpdate(@Param("userId") Long userId);
+
     List<MembershipProductOptionResponse> findActiveProducts();
 
     List<MembershipProduct> findAllProducts();

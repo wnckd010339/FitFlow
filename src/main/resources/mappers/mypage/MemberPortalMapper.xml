@@ -77,6 +77,11 @@
     <insert id="insertWorkoutSet">INSERT INTO workout_sets(session_id, exercise_name, set_number, weight, reps, completed) VALUES(#{sessionId}, #{exerciseName}, #{setNumber}, #{weight}, #{reps}, TRUE)</insert>
     <update id="updateWorkoutSession">UPDATE workout_sessions SET routine_id=#{routineId}, started_at=#{startedAt}, ended_at=#{endedAt}, memo=#{memo}, updated_at=CURRENT_TIMESTAMP WHERE id=#{sessionId} AND member_id=#{memberId}</update>
     <delete id="deleteWorkoutSets">DELETE FROM workout_sets WHERE session_id=#{sessionId}</delete>
+    <delete id="deleteWorkoutSession">
+        DELETE ws FROM workout_sessions ws
+        JOIN members m ON m.id = ws.member_id
+        WHERE ws.id = #{sessionId} AND m.user_id = #{userId}
+    </delete>
     <delete id="deleteWorkoutSetsByDate">DELETE wset FROM workout_sets wset JOIN workout_sessions ws ON ws.id=wset.session_id JOIN members m ON m.id=ws.member_id WHERE m.user_id=#{userId} AND DATE(ws.started_at)=#{workoutDate}</delete>
     <delete id="deleteWorkoutSessionsByDate">DELETE ws FROM workout_sessions ws JOIN members m ON m.id=ws.member_id WHERE m.user_id=#{userId} AND DATE(ws.started_at)=#{workoutDate}</delete>
 </mapper>

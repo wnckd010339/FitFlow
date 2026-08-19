@@ -57,7 +57,7 @@ public class AttendanceService {
     @Transactional
     public void checkIn(Long memberId) {
         LocalDate today = LocalDate.now();
-        if (!attendanceMapper.existsActiveMember(memberId)) {
+        if (attendanceMapper.findActiveMemberForUpdate(memberId).isEmpty()) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "활성 회원을 찾을 수 없습니다.");
         }
         if (!attendanceMapper.existsUsableMembership(memberId, today)) {

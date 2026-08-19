@@ -197,6 +197,12 @@
             AND status = 'ACTIVE'
     </select>
 
+    <select id="findActiveMemberIdByUserIdForUpdate" resultType="java.lang.Long">
+        SELECT id FROM members
+        WHERE user_id = #{userId} AND status = 'ACTIVE'
+        FOR UPDATE
+    </select>
+
     <insert id="insertMemberMembership"
             parameterType="com.acorn.gymmanagement.membership.model.MemberMembershipRegistration"
             useGeneratedKeys="true"

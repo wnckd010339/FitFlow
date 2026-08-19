@@ -12,6 +12,7 @@ public class WorkoutRecordForm {
     private Long routineId;
     @NotNull(message = "운동 시간을 입력해 주세요.") @Min(value = 1, message = "운동 시간은 1분 이상이어야 합니다.") @Max(value = 1440, message = "운동 시간은 24시간 이하여야 합니다.")
     private Integer durationMinutes;
+    @Size(max = 1000, message = "메모는 1000자 이하로 입력해 주세요.")
     private String memo;
     @Valid @Size(min = 1, message = "운동 항목을 하나 이상 입력해 주세요.")
     private List<WorkoutExerciseForm> exercises = new ArrayList<>();

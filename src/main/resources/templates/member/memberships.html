@@ -53,6 +53,8 @@
             <p><b data-result-order-name></b> · <b data-result-amount></b></p>
             <small>주문 유효시간: <time data-result-expires-at></time>까지</small>
             <small class="order-countdown">남은 시간 <b data-result-countdown>10:00</b></small>
+            <label class="demo-payment-method"><span>결제 수단</span><select data-result-payment-method><option value="CARD">카드</option><option value="CASH">현금</option><option value="TRANSFER">계좌이체</option></select></label>
+            <button class="primary-action" type="button" data-confirm-order>데모 결제 완료</button>
             <a th:href="@{/member/memberships}">내 회원권 새로고침</a>
         </div>
     </section>
@@ -62,7 +64,7 @@
         <div class="card-grid">
             <article class="portal-card membership" th:each="membership : ${memberships}">
                 <div class="card-top">
-                    <span th:text="${membership.productType}">GYM</span>
+                    <span th:switch="${membership.productType}"><span th:case="'GYM'">헬스</span><span th:case="'PT'">PT</span><span th:case="'COMBINED'">헬스 + PT</span><span th:case="*" th:text="${membership.productType}"></span></span>
                     <b th:classappend="${'status-' + #strings.toLowerCase(membership.status)}"
                        th:switch="${membership.status}">
                         <span th:case="'PENDING_PAYMENT'">결제 대기</span>

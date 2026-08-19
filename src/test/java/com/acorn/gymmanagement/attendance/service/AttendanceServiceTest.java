@@ -35,14 +35,14 @@ class AttendanceServiceTest {
     @Test
     void memberCheckInResolvesMemberIdFromLoggedInUserId() {
         when(attendanceMapper.findActiveMemberIdByUserId(10L)).thenReturn(Optional.of(25L));
-        when(attendanceMapper.existsActiveMember(25L)).thenReturn(true);
+        when(attendanceMapper.findActiveMemberForUpdate(25L)).thenReturn(Optional.of(25L));
         when(attendanceMapper.existsUsableMembership(any(), any())).thenReturn(true);
         when(attendanceMapper.existsOpenAttendance(25L)).thenReturn(false);
         when(attendanceMapper.insertAttendance(any())).thenReturn(1);
 
         attendanceService.checkInMember(10L);
 
-        verify(attendanceMapper).existsActiveMember(25L);
+        verify(attendanceMapper).findActiveMemberForUpdate(25L);
         verify(attendanceMapper).existsUsableMembership(org.mockito.ArgumentMatchers.eq(25L), any(LocalDate.class));
         verify(attendanceMapper).insertAttendance(any());
     }
@@ -66,7 +66,7 @@ class AttendanceServiceTest {
     @Test
     void memberWithoutActiveMembershipCannotCheckIn() {
         when(attendanceMapper.findActiveMemberIdByUserId(10L)).thenReturn(Optional.of(25L));
-        when(attendanceMapper.existsActiveMember(25L)).thenReturn(true);
+        when(attendanceMapper.findActiveMemberForUpdate(25L)).thenReturn(Optional.of(25L));
         when(attendanceMapper.existsUsableMembership(any(), any())).thenReturn(false);
 
         assertThrows(BusinessException.class, () -> attendanceService.checkInMember(10L));

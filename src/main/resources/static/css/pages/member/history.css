@@ -1,0 +1,18 @@
+.history-card { overflow: hidden; }
+.history-table { overflow-x: auto; }
+.history-type, .history-status { display: inline-flex; padding: 5px 9px; border-radius: 999px; color: var(--green); background: var(--mint); font-size: 10px; font-weight: 800; }
+.history-type.refund, .refund-amount { color: #a4473e; }
+.history-type.refund { background: #fff0ed; }
+.history-status.partial { color: #8a6417; background: #fff5d8; }
+.history-status.neutral { color: var(--muted); background: #edf2f0; }
+.history-empty { padding: 38px; color: var(--muted); text-align: center; }
+@media (max-width: 620px) {
+  .history-card { padding: 14px; }
+  .history-table { overflow: visible; }
+  .history-table table, .history-table tbody, .history-table tr, .history-table td { display: block; min-width: 0; }
+  .history-table thead { display: none; }
+  .history-table tr { margin-bottom: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; }
+  .history-table td { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border: 0; white-space: normal; text-align: right; }
+  .history-table td::before { color: var(--muted); font-weight: 700; content: attr(data-label); }
+  .history-table .history-empty::before { display: none; }
+}

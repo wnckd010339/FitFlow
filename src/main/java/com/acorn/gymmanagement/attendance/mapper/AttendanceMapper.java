@@ -23,7 +23,7 @@ public interface AttendanceMapper {
 
     Optional<Long> findActiveMemberIdByUserId(Long userId);
 
-    boolean existsActiveMember(Long memberId);
+    Optional<Long> findActiveMemberForUpdate(Long memberId);
 
     boolean existsUsableMembership(
             @Param("memberId") Long memberId,

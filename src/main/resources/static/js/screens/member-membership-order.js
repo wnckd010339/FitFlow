@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
     let countdownTimer;
+    let currentOrder = null;
 
     const now = new Date();
     const localToday = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -96,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const order = payload.data;
+            currentOrder = order;
             result.querySelector("[data-result-order-id]").textContent = order.orderId;
             result.querySelector("[data-result-order-name]").textContent = order.orderName;
             result.querySelector("[data-result-amount]").textContent = formatPrice(order.amount);
@@ -106,6 +108,33 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
             showMessage(error.message, "error");
             submitButton.disabled = false;
+        }
+    });
+    result.querySelector("[data-confirm-order]").addEventListener("click", async () => {
+        if (!currentOrder) return;
+        const confirmButton = result.querySelector("[data-confirm-order]");
+        const paymentMethod = result.querySelector("[data-result-payment-method]").value;
+        confirmButton.disabled = true;
+        try {
+            const response = await fetch(`/api/member/payment-orders/${encodeURIComponent(currentOrder.orderId)}/confirm`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json", [csrfHeader]: csrfToken},
+                body: JSON.stringify({amount: currentOrder.amount, paymentMethod})
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || payload.error?.detail || "결제를 완료하지 못했습니다.");
+            }
+            clearInterval(countdownTimer);
+            result.querySelector("[data-result-status]").textContent = payload.message;
+            result.querySelector("[data-result-countdown]").textContent = "결제 완료";
+            result.classList.add("paid");
+            result.querySelector("[data-result-payment-method]").disabled = true;
+            confirmButton.hidden = true;
+            showMessage("결제 내역과 활성 회원권에 즉시 반영되었습니다.", "success");
+        } catch (error) {
+            showMessage(error.message, "error");
+            confirmButton.disabled = false;
         }
     });
     window.addEventListener("pagehide", () => clearInterval(countdownTimer));

@@ -2,6 +2,8 @@ package com.acorn.gymmanagement.payment.controller;
 
 import com.acorn.gymmanagement.common.response.ApiResponse;
 import com.acorn.gymmanagement.payment.dto.request.CreateMemberPaymentOrderRequest;
+import com.acorn.gymmanagement.payment.dto.request.ConfirmMemberPaymentOrderRequest;
+import com.acorn.gymmanagement.payment.dto.response.MemberPaymentConfirmationResponse;
 import com.acorn.gymmanagement.payment.dto.response.PaymentOrderResponse;
 import com.acorn.gymmanagement.payment.service.MemberPaymentOrderService;
 import com.acorn.gymmanagement.security.SessionUser;
@@ -38,5 +40,17 @@ public class MemberPaymentOrderController {
                         "결제 주문을 생성했습니다.",
                         response
                 ));
+    }
+
+    @PostMapping("/{orderId}/confirm")
+    public ApiResponse<MemberPaymentConfirmationResponse> confirm(
+            @SessionAttribute(SessionUser.SESSION_KEY) SessionUser sessionUser,
+            @PathVariable String orderId,
+            @Valid @RequestBody ConfirmMemberPaymentOrderRequest request
+    ) {
+        return ApiResponse.success(
+                "결제가 완료되어 회원권이 활성화되었습니다.",
+                paymentOrderService.confirm(sessionUser.userId(), orderId, request)
+        );
     }
 }

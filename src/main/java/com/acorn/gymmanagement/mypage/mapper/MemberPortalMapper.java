@@ -28,6 +28,7 @@ public interface MemberPortalMapper {
     int insertWorkoutSet(WorkoutSetRegistration registration);
     int updateWorkoutSession(WorkoutSessionRegistration registration);
     int deleteWorkoutSets(@Param("sessionId") Long sessionId);
+    int deleteWorkoutSession(@Param("userId") Long userId, @Param("sessionId") Long sessionId);
     int deleteWorkoutSetsByDate(@Param("userId") Long userId,@Param("workoutDate") java.time.LocalDate workoutDate);
     int deleteWorkoutSessionsByDate(@Param("userId") Long userId,@Param("workoutDate") java.time.LocalDate workoutDate);
 }

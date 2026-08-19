@@ -36,10 +36,10 @@
             <div class="routine-title" th:if="${home.routine != null}"><span>TODAY</span><div><strong th:text="${home.routine.title}">하체 근력 강화</strong><small th:text="${home.exercises.isEmpty() ? '오늘 예정된 세부 운동이 없습니다.' : '운동 ' + home.exercises.size() + '종목'}">운동 5종목</small></div></div>
             <div class="routine-title" th:unless="${home.routine != null}"><span>REST</span><div><strong>활성화된 루틴이 없습니다.</strong><small>트레이너와 다음 운동 계획을 만들어 보세요.</small></div></div>
             <ul th:if="${!home.exercises.isEmpty()}">
-                <li th:each="exercise, status : ${home.exercises}"><span th:text="${#numbers.formatInteger(status.count, 2)}">01</span><div><strong th:text="${exercise.exerciseName}">백 스쿼트</strong><small th:text="${exercise.targetDescription()}">60kg · 4세트 · 8–10회</small></div><button type="button">시작</button></li>
+                <li th:each="exercise, status : ${home.exercises}"><span th:text="${#numbers.formatInteger(status.count, 2)}">01</span><div><strong th:text="${exercise.exerciseName}">백 스쿼트</strong><small th:text="${exercise.targetDescription()}">60kg · 4세트 · 8–10회</small></div><a th:href="@{/member/workouts(routineId=${home.routine.routineId})}">기록</a></li>
             </ul>
             <p class="empty-state" th:if="${home.routine != null and home.exercises.isEmpty()}">오늘은 회복에 집중하거나 자유 운동을 진행해 보세요.</p>
-            <a class="routine-start" href="#" th:if="${!home.exercises.isEmpty()}">오늘 운동 시작하기</a>
+            <a class="routine-start" th:href="@{/member/workouts(routineId=${home.routine.routineId})}" th:if="${!home.exercises.isEmpty()}">오늘 운동 시작하기</a>
         </article>
 
         <aside class="member-side">

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.SessionAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -20,6 +21,7 @@ public class MemberAttendanceController {
     @PostMapping("/check-in")
     public String checkIn(
             @SessionAttribute(SessionUser.SESSION_KEY) SessionUser sessionUser,
+            @RequestParam(defaultValue = "/member/home") String redirect,
             RedirectAttributes redirectAttributes
     ) {
         try {
@@ -28,12 +30,13 @@ public class MemberAttendanceController {
         } catch (BusinessException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
         }
-        return "redirect:/member/home";
+        return "redirect:" + safeRedirect(redirect);
     }
 
     @PostMapping("/check-out")
     public String checkOut(
             @SessionAttribute(SessionUser.SESSION_KEY) SessionUser sessionUser,
+            @RequestParam(defaultValue = "/member/home") String redirect,
             RedirectAttributes redirectAttributes
     ) {
         try {
@@ -42,6 +45,10 @@ public class MemberAttendanceController {
         } catch (BusinessException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
         }
-        return "redirect:/member/home";
+        return "redirect:" + safeRedirect(redirect);
+    }
+
+    private String safeRedirect(String redirect) {
+        return "/member/attendance".equals(redirect) ? redirect : "/member/home";
     }
 }
