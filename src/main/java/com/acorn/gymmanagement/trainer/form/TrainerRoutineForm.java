@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 
 public class TrainerRoutineForm {
     @NotNull(message = "회원을 선택해 주세요.")
@@ -16,7 +17,9 @@ public class TrainerRoutineForm {
     private String title;
     private String description;
     @NotNull(message = "시작일을 입력해 주세요.")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate startDate;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate endDate;
     @Valid
     @NotEmpty(message = "운동을 한 개 이상 추가해 주세요.")
