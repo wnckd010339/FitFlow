@@ -51,13 +51,13 @@ Controller → Service → Mapper → XML Mapper → MySQL
 
 ## 화면 미리보기
 
-| 관리자 대시보드 | 회원 QR 출석 |
+| 로그인 | 관리자 대시보드 |
 | --- | --- |
-| ![관리자 대시보드](design/generated/UI-03-admin-dashboard.svg) | ![회원 QR 출석](design/generated/MEMBER-03-qr-checkin.svg) |
+| ![로그인](design/generated/UI-01-login.svg) | ![관리자 대시보드](design/generated/UI-03-admin-dashboard.svg) |
 
-| 트레이너 운동 루틴 | 시설 관리 |
+| 트레이너 홈 | 회원 홈 |
 | --- | --- |
-| ![트레이너 운동 루틴](design/generated/UI-09-workout-routine.svg) | ![시설 관리](design/generated/UI-11-facility-management.svg) |
+| ![트레이너 홈](design/generated/UI-08-trainer-home.svg) | ![회원 홈](design/generated/MEMBER-01-home.svg) |
 
 ## 시작하기
 
